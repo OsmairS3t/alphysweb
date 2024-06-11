@@ -1,10 +1,13 @@
-import Link from "next/link";
+import Menu from "@aw/components/menu";
+import Dashboard from "./dashboard/page";
 
 export default function Home() {
   return (
-    <div className="flex flex-col gap-6 justify-center items-center">
-      <h1>Hi, man!</h1>
-      <Link href="./register/category">Categorias</Link>
-    </div>
+    <main className=" h-screen flex flex-row">
+      <Menu />
+      <aside className="bg-slate-950 h-full flex-1 text-gray-300 p-4">
+        <Dashboard />
+      </aside>
+    </main>
   );
 }
