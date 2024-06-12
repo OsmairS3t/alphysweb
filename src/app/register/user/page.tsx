@@ -1,12 +1,12 @@
 'use client'
 import React, { useState } from 'react';
 import Modal from 'react-modal';
-import ListProduct from './list';
+import ListUser from './list';
 import HeaderPage from '@aw/components/headerPage';
-import AddNewProduct from './addNew';
-import FilterProduct from './filter';
+import AddNewUser from './addNew';
+import FilterUser from './filter';
 
-export default function Product() {
+export default function User() {
   const [isAddOpen, setIsAddOpen] = useState(false)
   const [isFilterOpen, setIsFilterOpen] = useState(false)
   
@@ -20,23 +20,23 @@ export default function Product() {
 
   return (
     <div className='flex flex-col gap-4'>
-      <HeaderPage title='Cadastro de Produtos' onAddClick={handleNew} onFilterClick={handleFilter} />
-      <ListProduct />
+      <HeaderPage title='Cadastro de Usuarios' onAddClick={handleNew} onFilterClick={handleFilter} />
+      <ListUser />
       
       <Modal
         isOpen={isAddOpen}
         ariaHideApp={false}
         contentLabel="Adicionar Novo"
       >
-        <AddNewProduct onclose={setIsAddOpen} />
+        <AddNewUser onclose={setIsAddOpen} />
       </Modal>
       
       <Modal
         isOpen={isFilterOpen}
         ariaHideApp={false}
-        contentLabel="Filtrar Produto"
+        contentLabel="Filtrar Categoria"
       >
-        <FilterProduct onclose={setIsFilterOpen} />
+        <FilterUser onclose={setIsFilterOpen} />
       </Modal>
 
     </div>

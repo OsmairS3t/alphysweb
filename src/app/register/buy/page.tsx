@@ -1,15 +1,16 @@
 'use client'
 import React, { useState } from 'react';
-import Modal from 'react-modal';
-import ListProduct from './list';
-import HeaderPage from '@aw/components/headerPage';
-import AddNewProduct from './addNew';
-import FilterProduct from './filter';
+import Modal from 'react-modal'
 
-export default function Product() {
+import HeaderPage from '@aw/components/headerPage';
+import ListBuy from './list';
+import AddNewBuy from './addNew';
+import FilterBuy from './filter';
+
+export default function Buy() {
   const [isAddOpen, setIsAddOpen] = useState(false)
   const [isFilterOpen, setIsFilterOpen] = useState(false)
-  
+
   function handleNew() {
     setIsAddOpen(true)
   }
@@ -20,23 +21,23 @@ export default function Product() {
 
   return (
     <div className='flex flex-col gap-4'>
-      <HeaderPage title='Cadastro de Produtos' onAddClick={handleNew} onFilterClick={handleFilter} />
-      <ListProduct />
+      <HeaderPage title='Cadastro de Compras' onAddClick={handleNew} onFilterClick={handleFilter} />
+      <ListBuy />
       
       <Modal
         isOpen={isAddOpen}
         ariaHideApp={false}
-        contentLabel="Adicionar Novo"
+        contentLabel="Adicionar Nova"
       >
-        <AddNewProduct onclose={setIsAddOpen} />
+        <AddNewBuy onclose={setIsAddOpen} />
       </Modal>
       
       <Modal
         isOpen={isFilterOpen}
         ariaHideApp={false}
-        contentLabel="Filtrar Produto"
+        contentLabel="Filtrar Compra"
       >
-        <FilterProduct onclose={setIsFilterOpen} />
+        <FilterBuy onclose={setIsFilterOpen} />
       </Modal>
 
     </div>
