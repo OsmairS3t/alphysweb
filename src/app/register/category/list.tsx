@@ -32,7 +32,7 @@ export default function ListCategory() {
       <tbody>
         {categories.map(cat => 
           <tr key={cat.id} className='bg-slate-950 even:bg-slate-900'>
-            <td className='text-center'>1</td>
+            <td className='text-center'>{cat.id}</td>
             <td>{cat.name}</td>
             <td className='text-center'>Excluir</td>
           </tr>
