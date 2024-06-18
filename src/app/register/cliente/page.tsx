@@ -5,6 +5,7 @@ import ListClient from './list';
 import HeaderPage from '@aw/components/headerPage';
 import AddNewClient from './addNew';
 import FilterClient from './filter';
+import { styleModalContainer } from '@aw/utils/styleModal';
 
 export default function Cliente() {
   const [isAddOpen, setIsAddOpen] = useState(false)
@@ -27,6 +28,7 @@ export default function Cliente() {
         isOpen={isAddOpen}
         ariaHideApp={false}
         contentLabel="Adicionar Novo"
+        style={styleModalContainer}
       >
         <AddNewClient onclose={setIsAddOpen} />
       </Modal>
@@ -34,7 +36,8 @@ export default function Cliente() {
       <Modal
         isOpen={isFilterOpen}
         ariaHideApp={false}
-        contentLabel="Filtrar Categoria"
+        contentLabel="Filtrar Cliente"
+        style={styleModalContainer}
       >
         <FilterClient onclose={setIsFilterOpen} />
       </Modal>

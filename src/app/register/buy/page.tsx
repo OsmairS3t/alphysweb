@@ -6,6 +6,7 @@ import HeaderPage from '@aw/components/headerPage';
 import ListBuy from './list';
 import AddNewBuy from './addNew';
 import FilterBuy from './filter';
+import { styleModalContainer } from '@aw/utils/styleModal';
 
 export default function Buy() {
   const [isAddOpen, setIsAddOpen] = useState(false)
@@ -28,6 +29,7 @@ export default function Buy() {
         isOpen={isAddOpen}
         ariaHideApp={false}
         contentLabel="Adicionar Nova"
+        style={styleModalContainer}
       >
         <AddNewBuy onclose={setIsAddOpen} />
       </Modal>
@@ -36,6 +38,7 @@ export default function Buy() {
         isOpen={isFilterOpen}
         ariaHideApp={false}
         contentLabel="Filtrar Compra"
+        style={styleModalContainer}
       >
         <FilterBuy onclose={setIsFilterOpen} />
       </Modal>

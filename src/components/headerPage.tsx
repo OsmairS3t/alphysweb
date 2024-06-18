@@ -22,7 +22,7 @@ export default function HeaderPage({ title, onAddClick, onFilterClick }:HeaderPr
         onClick={onAddClick}
         className='p-2 rounded bg-green-400 hover:bg-green-500 transition-all justify-center items-center text-slate-950 font-bold'
       >
-        + Novo
+        Novo
       </button>
     </div>
   </section>

@@ -5,6 +5,7 @@ import ListProduct from './list';
 import HeaderPage from '@aw/components/headerPage';
 import AddNewProduct from './addNew';
 import FilterProduct from './filter';
+import { styleModalContainer } from '@aw/utils/styleModal';
 
 export default function Product() {
   const [isAddOpen, setIsAddOpen] = useState(false)
@@ -27,6 +28,7 @@ export default function Product() {
         isOpen={isAddOpen}
         ariaHideApp={false}
         contentLabel="Adicionar Novo"
+        style={styleModalContainer}
       >
         <AddNewProduct onclose={setIsAddOpen} />
       </Modal>
@@ -35,6 +37,7 @@ export default function Product() {
         isOpen={isFilterOpen}
         ariaHideApp={false}
         contentLabel="Filtrar Produto"
+        style={styleModalContainer}
       >
         <FilterProduct onclose={setIsFilterOpen} />
       </Modal>

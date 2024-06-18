@@ -5,6 +5,7 @@ import ListUser from './list';
 import HeaderPage from '@aw/components/headerPage';
 import AddNewUser from './addNew';
 import FilterUser from './filter';
+import { styleModalContainer } from '@aw/utils/styleModal';
 
 export default function User() {
   const [isAddOpen, setIsAddOpen] = useState(false)
@@ -27,6 +28,7 @@ export default function User() {
         isOpen={isAddOpen}
         ariaHideApp={false}
         contentLabel="Adicionar Novo"
+        style={styleModalContainer}
       >
         <AddNewUser onclose={setIsAddOpen} />
       </Modal>
@@ -35,6 +37,7 @@ export default function User() {
         isOpen={isFilterOpen}
         ariaHideApp={false}
         contentLabel="Filtrar Categoria"
+        style={styleModalContainer}
       >
         <FilterUser onclose={setIsFilterOpen} />
       </Modal>

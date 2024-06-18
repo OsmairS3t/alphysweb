@@ -5,6 +5,7 @@ import ListRecipe from './list';
 import HeaderPage from '@aw/components/headerPage';
 import AddNewRecipe from './addNew';
 import FilterRecipe from './filter';
+import { styleModalContainer } from '@aw/utils/styleModal';
 
 export default function Recipe() {
   const [isAddOpen, setIsAddOpen] = useState(false)
@@ -27,6 +28,7 @@ export default function Recipe() {
         isOpen={isAddOpen}
         ariaHideApp={false}
         contentLabel="Adicionar Nova"
+        style={styleModalContainer}
       >
         <AddNewRecipe onclose={setIsAddOpen} />
       </Modal>
@@ -35,6 +37,7 @@ export default function Recipe() {
         isOpen={isFilterOpen}
         ariaHideApp={false}
         contentLabel="Filtrar Receita"
+        style={styleModalContainer}
       >
         <FilterRecipe onclose={setIsFilterOpen} />
       </Modal>

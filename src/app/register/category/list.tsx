@@ -1,40 +1,44 @@
 'use client'
-import React, { useEffect, useState } from 'react';
-import { supabase } from '@aw/lib/database'; 
+import React from 'react';
+import { FiEdit, FiTrash2 } from 'react-icons/fi'
 import { ICategory } from '@aw/utils/interface';
+import Link from 'next/link';
+import AddNewCategory from './addNew';
+import { supabase } from '@aw/lib/database';
 
-export default function ListCategory() {
-  const [categories, setCategories] = useState<ICategory[]>([])
+interface Props {
+  listCategory: ICategory[]
+}
 
-  async function getCategories() {
-    const {data} = await supabase
-    .from('categories')
-    .select('*')
-    
-    if(data) {
-      setCategories(data)
+export default function ListCategory({ listCategory }:Props) {
+
+  async function handleDelete(id: string) {
+    try {
+      await supabase.from('categories').delete().eq('id', id)
+      alert('Categoria excluida com sucesso!')
+    } catch (error) {
+      console.log(error)      
     }
   }
-
-  useEffect(() => {
-    getCategories()
-  },[])
 
   return (
     <table className='w-full'>
       <thead className='bg-slate-800 border-b-2 border-slate-700'>
         <tr>
-          <th className='p-1'>Id</th>
+          <th className='p-1 w-1/6'>Id</th>
           <th className='p-1 text-left'>Categoria</th>
-          <th className='p-1'>Opção</th>
+          <th className='p-1 w-1/4'>Opção</th>
         </tr>
       </thead>
       <tbody>
-        {categories.map(cat => 
+        {listCategory.map(cat => 
           <tr key={cat.id} className='bg-slate-950 even:bg-slate-900'>
             <td className='text-center'>{cat.id}</td>
             <td>{cat.name}</td>
-            <td className='text-center'>Excluir</td>
+            <td className='flex flex-row justify-center items-center gap-4'>
+              <Link href="/register/category"><FiEdit size={20} /></Link>
+              <button onClick={() => handleDelete(cat.id)}><FiTrash2 size={20} /></button>
+            </td>
           </tr>
         )}
       </tbody>

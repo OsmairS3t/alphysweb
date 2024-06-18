@@ -5,6 +5,7 @@ import ListStock from './list';
 import HeaderPage from '@aw/components/headerPage';
 import AddNewStock from './addNew';
 import FilterStock from './filter';
+import { styleModalContainer } from '@aw/utils/styleModal';
 
 export default function Stock() {
   const [isAddOpen, setIsAddOpen] = useState(false)
@@ -27,6 +28,7 @@ export default function Stock() {
         isOpen={isAddOpen}
         ariaHideApp={false}
         contentLabel="Adicionar Novo"
+        style={styleModalContainer}
       >
         <AddNewStock onclose={setIsAddOpen} />
       </Modal>
@@ -35,6 +37,7 @@ export default function Stock() {
         isOpen={isFilterOpen}
         ariaHideApp={false}
         contentLabel="Filtrar Produto"
+        style={styleModalContainer}
       >
         <FilterStock onclose={setIsFilterOpen} />
       </Modal>
