@@ -5,7 +5,7 @@ export default function Layout({children}: Readonly<{children: React.ReactNode;}
   return (
     <div className='h-screen w-screen flex flex-row'>
       <Menu />
-      <div className="bg-slate-950 h-full flex-1 text-gray-300 p-4">
+      <div className="h-full flex-1 p-4 z-10 bg-white">
         {children}
       </div>
     </div>

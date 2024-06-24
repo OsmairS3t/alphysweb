@@ -5,7 +5,7 @@ export default function Home() {
   return (
     <main className=" h-screen flex flex-row">
       <Menu />
-      <aside className="bg-slate-950 h-full flex-1 text-gray-300 p-4">
+      <aside className="h-full flex-1 p-4 z-20 bg-white">
         <Dashboard />
       </aside>
     </main>

@@ -4,7 +4,7 @@ import React from 'react';
 export default function ListBuy() {
   return (
     <table className='w-full'>
-      <thead className='bg-slate-800 border-b-2 border-slate-700'>
+      <thead className='border-b-2 '>
         <tr>
           <th className='p-1 text-left'>Tipo</th>
           <th className='p-1 text-left'>Produto</th>
@@ -15,7 +15,7 @@ export default function ListBuy() {
         </tr>
       </thead>
       <tbody>
-        <tr className='bg-slate-950 even:bg-slate-900'>
+        <tr>
           <td>Chocolate</td>
           <td>Meio amargo</td>
           <td>Venda da esquina</td>
