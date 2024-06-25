@@ -5,7 +5,6 @@ import { supabase } from '@aw/lib/database';
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
-
 import { Table,
   TableBody,
   TableCell,
@@ -18,7 +17,6 @@ import { Dialog,
   DialogContent, 
   DialogTitle, 
   DialogTrigger, 
-  DialogFooter, 
   DialogHeader, 
   DialogClose} from '@aw/components/ui/dialog';
 import {
@@ -31,7 +29,7 @@ import {
   FormMessage,
 } from "@aw/components/ui/form"
 import { Input } from '@aw/components/ui/input';
-import { PlusCircle, Search } from 'lucide-react';
+import { PlusCircle, Search, Trash2 } from 'lucide-react';
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -40,9 +38,7 @@ const formSchema = z.object({
 })
 
 export default function ListCategory() {
-  const [idCategory, setIdCategory] = useState('')
-  const [isAddOpen, setIsAddOpen] = useState(false)
-  const [isFilterOpen, setIsFilterOpen] = useState(false)
+  const [search, setSearch] = useState('')
   const [categories, setCategories] = useState<ICategory[]>([])
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -51,20 +47,45 @@ export default function ListCategory() {
     },
   })
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values)
+  async function getCategories(name?: string) {
+    if(name) {
+      const {data} = await supabase.from('categories').select('*').like('name', name)
+      if(data) {
+        setCategories(data)
+      }
+    } else {
+      const {data} = await supabase.from('categories').select('*').order('name')
+      if(data) {
+        setCategories(data)
+      }
+    }
   }
 
-  function handleNew() {
-    setIdCategory('')
-    setIsAddOpen(true)
-  }
-  
-  async function getCategories() {
-    const {data} = await supabase.from('categories').select('*')
-    if(data) {
-      setCategories(data)
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    try {
+      await supabase.from('categories').insert({ name: values.name })
+      alert('Categoria incluída com sucesso!')
+      form.reset()
+      getCategories()
+    } catch (error) {
+      console.log(error)
     }
+  }
+
+  async function handleDelete(id: string) {
+    if (confirm("Tem certeza que deseja excluir esta categoria?")) {
+      try {
+        await supabase.from('categories').delete().eq('id', id)
+        alert('Categoria excluida com sucesso!')
+        getCategories()
+      } catch (error) {
+        console.log(error)      
+      }
+    } 
+  }
+
+  function loadCategory() {
+    
   }
  
   useEffect(() => {
@@ -76,13 +97,12 @@ export default function ListCategory() {
       <h2 className='p-2 text-lg font-semibold my-2'>Cadastro de categorias</h2>
       <div className='flex items-center justify-between gap-4 mb-4'>
         <form className='flex flex-row gap-2'>
-          <Input name="" id='name' placeholder='Categoria' />
+          <Input name="search" id='search' placeholder='Categoria' />
           <Button type='submit' variant="outline">
-            <Search className='w-4 h-4 mr-2' />Buscar</Button>
+            <Search className='w-4 h-4 mr-2' onClick={()=>getCategories()}/>Buscar</Button>
         </form>
 
         <Dialog>
-          
           <DialogTrigger asChild>
             <Button variant="default">
               <PlusCircle className='w-4 h-4 mr-2' />Nova categoria</Button>
@@ -126,19 +146,20 @@ export default function ListCategory() {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className='font-bold text-md'>Categoria</TableHead>
+            <TableHead colSpan={2} className='font-bold text-md'>Categoria</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {categories.map((cat) => (
             <TableRow key={cat.id}>
               <TableCell>{cat.name}</TableCell>
+              <TableCell width={30}><button onClick={() => handleDelete(cat.id)}><Trash2 className='w-4 h-4' /></button></TableCell>
             </TableRow>
           ))}
         </TableBody>
         <TableFooter>
           <TableRow>
-            <TableCell className="text-right">Total: {categories.length}</TableCell>
+            <TableCell colSpan={2} className="text-right">Total: {categories.length}</TableCell>
           </TableRow>
         </TableFooter>
       </Table>

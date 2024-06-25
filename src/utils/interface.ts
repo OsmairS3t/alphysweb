@@ -73,3 +73,17 @@ export interface ITransaction {
   amount: number;
   price: string;
 }
+
+
+//===TABLES===/
+// buys
+// categories
+// clients
+// ingredients
+// ingredients_recipe
+// orders
+// products
+// recipes
+// sales
+// stocks
+// users
