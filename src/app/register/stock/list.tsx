@@ -1,33 +1,251 @@
 'use client'
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { IStock, IProduct, ISale } from '@aw/utils/interface';
+import { supabase } from '@aw/lib/database';
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import { z } from "zod"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  TableRow
+} from '@aw/components/ui/table';
+import { Button } from '@aw/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogTrigger,
+  DialogHeader,
+  DialogClose
+} from '@aw/components/ui/dialog';
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@aw/components/ui/form"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@aw/components/ui/select"
+import { Input } from '@aw/components/ui/input';
+import { PlusCircle, Search, Trash2 } from 'lucide-react';
+import { Switch } from '@aw/components/ui/switch';
+
+const formSchema = z.object({
+  product: z.string({
+    message: "É necessário selecionar um produto.",
+  }),
+  amount: z.string().min(1, {
+    message: "É necessário informar ao menos 1 quantidade."
+  }),
+  hasstock: z.boolean(),
+})
 
 export default function ListStock() {
+  const [search, setSearch] = useState('')
+  const [stocks, setStocks] = useState<IStock[]>([])
+  const [stock, setStock] = useState(false)
+  const [products, setProducts] = useState<IProduct[]>([])
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      product: "",
+      amount: "",
+      hasstock: false
+    },
+  })
+
+  function handleChangeStock() {
+    setStock(!stock)
+  }
+
+  async function getProducts() {
+    const { data } = await supabase.from('products').select('*').order('name')
+    if (data) {
+      setProducts(data)
+    }
+  }
+
+  async function getStocks(search?: string) {
+    const searchid = 1
+    if (search) {
+      const { data } = await supabase.from('stocks').select('*').eq('productid', searchid)
+      if (data) {
+        setStocks(data)
+      }
+    } else {
+      const { data } = await supabase.from('stocks').select('*')
+      if (data) {
+        setStocks(data)
+      }
+    }
+  }
+
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    try {
+      await supabase.from('sales').insert({
+        productid: values.product,
+        amount: Number(values.amount),
+        hasstock: values.hasstock,
+      })
+      alert('venda incluída com sucesso!')
+      form.reset()
+      getStocks()
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  async function handleDelete(id: string) {
+    if (confirm("Tem certeza que deseja excluir esta venda?")) {
+      try {
+        await supabase.from('sales').delete().eq('id', id)
+        alert('Venda excluida com sucesso!')
+        getStocks()
+      } catch (error) {
+        console.log(error)
+      }
+    }
+  }
+
+  useEffect(() => {
+    getProducts()
+    getStocks()
+  }, [])
+
   return (
-    <table className='w-full'>
-      <thead className='bg-slate-800 border-b-2 border-slate-700'>
-        <tr>
-          <th className='p-1 text-left'>Produto</th>
-          <th className='p-1'>Quant.</th>
-          <th className='p-1'>Opção</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr className='bg-slate-950 even:bg-slate-900'>
-          <td>Bombom</td>
-          <td className='text-center'>1</td>
-          <td className='text-center'>Excluir</td>
-        </tr>
-        <tr className='bg-slate-950 even:bg-slate-900'>
-          <td>Cápsula</td>
-          <td className='text-center'>2</td>
-          <td className='text-center'>Excluir</td>
-        </tr>
-        <tr className='bg-slate-950 even:bg-slate-900'>
-          <td>Pão</td>
-          <td className='text-center'>3</td>
-          <td className='text-center'>Excluir</td>
-        </tr>
-      </tbody>
-    </table>
+    <div>
+      <h2 className='p-2 text-lg font-semibold my-2'>Cadastro de Produtos no Estoque</h2>
+      <div className='flex items-center justify-between gap-4 mb-4'>
+        <form className='flex flex-row gap-2'>
+          <Input name="search" id='search' placeholder='Localizar' />
+          <Button type='submit' variant="outline">
+            <Search className='w-4 h-4 mr-2' onClick={() => getStocks()} />Buscar</Button>
+        </form>
+
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button variant="default">
+              <PlusCircle className='w-4 h-4 mr-2' />Novo Estoque</Button>
+          </DialogTrigger>
+
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Novo Estoque</DialogTitle>
+            </DialogHeader>
+
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="product"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Produto:</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione o produto" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {products.map(pro => (
+                            <SelectItem key={pro.id} value={pro.id}>{pro.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="amount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Quantidade:</FormLabel>
+                      <FormControl>
+                        <Input placeholder="0" {...field} />
+                      </FormControl>
+                      <FormDescription>
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="hasstock"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                      <div className="space-y-0.5 flex flex-row justify-between">
+                        <FormLabel className="text-base">
+                          Tem no estoque?
+                        </FormLabel>
+                        <span className='ml-4'>
+                          {stock ? "Sim" : "Não"}
+                        </span>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          onClick={handleChangeStock}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+
+                <div className='flex flex-row justify-end gap-2'>
+                  <DialogClose>
+                    <Button type='button' variant="outline">Cancelar</Button>
+                  </DialogClose>
+                  <Button type='submit'>Salvar</Button>
+                </div>
+              </form>
+            </Form>
+          </DialogContent>
+
+        </Dialog>
+      </div>
+
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className='font-bold text-md w-32'>Produto</TableHead>
+            <TableHead className='font-bold text-md'>Quant.</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {stocks.map((stk) => (
+            <TableRow key={stk.id}>
+              <TableCell>{stk.product?.name}</TableCell>
+              <TableCell>{stk.amount}</TableCell>
+              <TableCell width={30}><button onClick={() => handleDelete(stk.id)}><Trash2 className='w-4 h-4' /></button></TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+        <TableFooter>
+          <TableRow>
+            <TableCell colSpan={4} className="text-right">Total: {stocks.length}</TableCell>
+          </TableRow>
+        </TableFooter>
+      </Table>
+    </div>
   )
 }

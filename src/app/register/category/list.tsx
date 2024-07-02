@@ -29,7 +29,8 @@ import {
   FormMessage,
 } from "@aw/components/ui/form"
 import { Input } from '@aw/components/ui/input';
-import { PlusCircle, Search, Trash2 } from 'lucide-react';
+import { Edit2, PlusCircle, Search, Trash2 } from 'lucide-react';
+import FormCategory from './formCategory';
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -39,6 +40,11 @@ const formSchema = z.object({
 
 export default function ListCategory() {
   const [search, setSearch] = useState('')
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [frmCategory, setFrmCategory] = useState<ICategory>({
+    id:'',
+    name: ''
+  })
   const [categories, setCategories] = useState<ICategory[]>([])
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -60,6 +66,10 @@ export default function ListCategory() {
       }
     }
   }
+  
+  const handleDialogClose = () => {
+    setDialogOpen(false);
+  };
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
@@ -84,8 +94,12 @@ export default function ListCategory() {
     } 
   }
 
-  function loadCategory() {
-    
+  async function loadCategory(id: string) {
+    const { data } = await supabase.from('categories').select('*').eq('id', id)
+    if(data) {
+      setFrmCategory(data[0])
+    }
+    setDialogOpen(true)
   }
  
   useEffect(() => {
@@ -105,7 +119,8 @@ export default function ListCategory() {
         <Dialog>
           <DialogTrigger asChild>
             <Button variant="default">
-              <PlusCircle className='w-4 h-4 mr-2' />Nova categoria</Button>
+              <PlusCircle className='w-4 h-4 mr-2' />Nova categoria
+            </Button>
           </DialogTrigger>
 
           <DialogContent>
@@ -139,7 +154,17 @@ export default function ListCategory() {
               </form>
             </Form>
           </DialogContent>
+        </Dialog> 
 
+        <Dialog open={dialogOpen} onOpenChange={handleDialogClose}>
+          <DialogTrigger asChild></DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Editar Categoria</DialogTitle>
+            </DialogHeader>
+            
+            <FormCategory frmCat={frmCategory} />
+          </DialogContent>
         </Dialog> 
       </div>
 
@@ -153,13 +178,14 @@ export default function ListCategory() {
           {categories.map((cat) => (
             <TableRow key={cat.id}>
               <TableCell>{cat.name}</TableCell>
+              <TableCell width={30}><button onClick={() => loadCategory(cat.id)}><Edit2 className='w-4 h-4' /></button></TableCell>
               <TableCell width={30}><button onClick={() => handleDelete(cat.id)}><Trash2 className='w-4 h-4' /></button></TableCell>
             </TableRow>
           ))}
         </TableBody>
         <TableFooter>
           <TableRow>
-            <TableCell colSpan={2} className="text-right">Total: {categories.length}</TableCell>
+            <TableCell colSpan={3} className="text-right">Total: {categories.length}</TableCell>
           </TableRow>
         </TableFooter>
       </Table>
