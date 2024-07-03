@@ -1,6 +1,6 @@
 'use client'
 import React, { useEffect, useState } from 'react';
-import { IBuy, ICategory, IProduct } from '@aw/utils/interface';
+import { ICategory, IProduct } from '@aw/utils/interface';
 import { supabase } from '@aw/lib/database';
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
@@ -92,8 +92,8 @@ export default function ListProduct() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
-      await supabase.from('buys').insert({
-        category: values.category,
+      await supabase.from('products').insert({
+        categoryid: Number(values.category),
         name: values.name,
         price: Number(values.price),
         photo: values.photo
@@ -230,9 +230,10 @@ export default function ListProduct() {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className='font-bold text-md w-32'>Categoria</TableHead>
+            <TableHead className='font-bold text-md w-52'>Categoria</TableHead>
             <TableHead className='font-bold text-md'>Produto</TableHead>
-            <TableHead className='font-bold text-md'>Preço</TableHead>
+            <TableHead className='font-bold text-md text-center'>Preço</TableHead>
+            <TableHead className='font-bold text-md text-center'></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -240,7 +241,7 @@ export default function ListProduct() {
             <TableRow key={pro.id}>
               <TableCell>{pro.category?.name}</TableCell>
               <TableCell>{pro.name}</TableCell>
-              <TableCell className='text-right'>{pro.price}</TableCell>
+              <TableCell className='text-center'>{pro.price}</TableCell>
               <TableCell width={30}><button onClick={() => handleDelete(pro.id)}><Trash2 className='w-4 h-4' /></button></TableCell>
             </TableRow>
           ))}

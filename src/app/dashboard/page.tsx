@@ -52,7 +52,7 @@ export default function Dashboard() {
           </select>
         </div>
       </section>
-      <section className="flex flex-row flex-wrap w-96 lg:w-full justify-start lg:justify-center gap-8">
+      <section className="flex flex-row flex-wrap w-96 lg:w-full justify-center gap-8">
         <CardResume
           title="Vendas"
           price={999.99}
@@ -72,11 +72,11 @@ export default function Dashboard() {
         />
       </section>
 
-      <section className="flex flex-row flex-wrap justify-between w-full h-[300px] my-4 gap-4">
-        <div className="p-4 w-96 h-72 lg:w-[600px] lg:h-[350px] border-[1px] border-slate-300 hover:shadow-md transition-all rounded-lg">
+      <section className="flex flex-row flex-wrap justify-start w-full h-[300px] my-4 gap-4">
+        <div className="p-4 w-96 h-72 lg:w-[600px] lg:h-[350px] border-[1px] border-slate-200 shadow-xl hover:shadow-lg transition-all rounded-lg">
           <Chart data={dataChart} />
         </div>
-        <div className="p-4 w-96 h-72 lg:w-[500px] lg:h-[350px] border-[1px] border-slate-300 hover:shadow-md transition-all rounded-lg">
+        <div className="p-4 w-96 h-72 lg:w-[500px] lg:h-[350px] border-[1px] border-slate-200 shadow-xl hover:shadow-lg transition-all rounded-lg">
           <LastRecords data={dataList} />
         </div>
       </section>
