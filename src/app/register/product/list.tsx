@@ -5,20 +5,24 @@ import { supabase } from '@aw/lib/database';
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
-import { Table,
+import {
+  Table,
   TableBody,
   TableCell,
   TableFooter,
   TableHead,
   TableHeader,
-  TableRow } from '@aw/components/ui/table';
+  TableRow
+} from '@aw/components/ui/table';
 import { Button } from '@aw/components/ui/button';
-import { Dialog, 
-  DialogContent, 
-  DialogTitle, 
-  DialogTrigger, 
-  DialogHeader, 
-  DialogClose} from '@aw/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogTrigger,
+  DialogHeader,
+  DialogClose
+} from '@aw/components/ui/dialog';
 import {
   Form,
   FormControl,
@@ -39,10 +43,9 @@ import { Input } from '@aw/components/ui/input';
 import { PlusCircle, Search, Trash2 } from 'lucide-react';
 
 const formSchema = z.object({
-  category: z
-    .string({
-      required_error: "Favor selecionar uma categoria.",
-    }),
+  category: z.string({
+    required_error: "Informe uma categoria",
+  }),
   name: z.string().min(2, {
     message: "O nome do produto deve ter ao menos 2 caracteres.",
   }),
@@ -67,21 +70,21 @@ export default function ListProduct() {
   })
 
   async function getCategories() {
-    const {data} = await supabase.from('categories').select('*').order('name')
-    if(data) {
+    const { data } = await supabase.from('categories').select('*').order('name')
+    if (data) {
       setCategories(data)
     }
   }
 
   async function getProducts(name?: string) {
-    if(name) {
-      const {data} = await supabase.from('products').select('*').like('name', name)
-      if(data) {
+    if (name) {
+      const { data } = await supabase.from('products').select('*').like('name', name)
+      if (data) {
         setProducts(data)
       }
     } else {
-      const {data} = await supabase.from('products').select('*')
-      if(data) {
+      const { data } = await supabase.from('products').select('*')
+      if (data) {
         setProducts(data)
       }
     }
@@ -89,7 +92,7 @@ export default function ListProduct() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
-      await supabase.from('buys').insert({ 
+      await supabase.from('buys').insert({
         category: values.category,
         name: values.name,
         price: Number(values.price),
@@ -110,15 +113,15 @@ export default function ListProduct() {
         alert('Produto excluido com sucesso!')
         getProducts()
       } catch (error) {
-        console.log(error)      
+        console.log(error)
       }
-    } 
+    }
   }
- 
+
   useEffect(() => {
     getCategories()
     getProducts()
-  },[])
+  }, [])
 
   return (
     <div>
@@ -127,7 +130,7 @@ export default function ListProduct() {
         <form className='flex flex-row gap-2'>
           <Input name="search" id='search' placeholder='Localizar' />
           <Button type='submit' variant="outline">
-            <Search className='w-4 h-4 mr-2' onClick={()=>getProducts()}/>Buscar</Button>
+            <Search className='w-4 h-4 mr-2' onClick={() => getProducts()} />Buscar</Button>
         </form>
 
         <Dialog>
@@ -148,7 +151,7 @@ export default function ListProduct() {
                   name="category"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Categoria:</FormLabel>
+                      <FormLabel>Categoria</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger>
@@ -221,7 +224,7 @@ export default function ListProduct() {
             </Form>
           </DialogContent>
 
-        </Dialog> 
+        </Dialog>
       </div>
 
       <Table>
