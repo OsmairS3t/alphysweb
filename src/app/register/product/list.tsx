@@ -55,9 +55,18 @@ const formSchema = z.object({
   photo: z.string(),
 })
 
+interface ProductCategory {
+  id: number;
+  name: string;
+  price: number;
+  photo: string;
+  categories: ICategory;
+}
+
 export default function ListProduct() {
   const [search, setSearch] = useState('')
   const [categories, setCategories] = useState<ICategory[]>([])
+  const [productsCategory, setProductsCategory] = useState<ProductCategory[]>([])
   const [products, setProducts] = useState<IProduct[]>([])
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -76,17 +85,29 @@ export default function ListProduct() {
     }
   }
 
-  async function getProducts(name?: string) {
-    if (name) {
-      const { data } = await supabase.from('products').select('*').like('name', name)
-      if (data) {
-        setProducts(data)
-      }
+  // async function getProducts(name?: string) {
+  //   if (name) {
+  //     const { data } = await supabase.from('products').select('*').like('name', name)
+  //     if (data) {
+  //       setProducts(data)
+  //     }
+  //   } else {
+  //     const { data } = await supabase.from('products').select('*')
+  //     if (data) {
+  //       setProducts(data)
+  //     }
+  //   }
+  // }
+
+  async function getProductsCategory() {
+    const { data, error } = await supabase
+      .from('products')
+      .select('id, name, price, photo, categories!inner(id, name)')
+    if (data) {
+      setProductsCategory(data)
+      console.log(data)
     } else {
-      const { data } = await supabase.from('products').select('*')
-      if (data) {
-        setProducts(data)
-      }
+      console.log(error)
     }
   }
 
@@ -100,7 +121,7 @@ export default function ListProduct() {
       })
       alert('Produto incluído com sucesso!')
       form.reset()
-      getProducts()
+      getProductsCategory()
     } catch (error) {
       console.log(error)
     }
@@ -120,7 +141,8 @@ export default function ListProduct() {
 
   useEffect(() => {
     getCategories()
-    getProducts()
+    // getProducts()
+    getProductsCategory()
   }, [])
 
   return (
@@ -130,7 +152,7 @@ export default function ListProduct() {
         <form className='flex flex-row gap-2'>
           <Input name="search" id='search' placeholder='Localizar' />
           <Button type='submit' variant="outline">
-            <Search className='w-4 h-4 mr-2' onClick={() => getProducts()} />Buscar</Button>
+            <Search className='w-4 h-4 mr-2' onClick={() => getProductsCategory()} />Buscar</Button>
         </form>
 
         <Dialog>
@@ -237,12 +259,12 @@ export default function ListProduct() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {products.map((pro) => (
+          {productsCategory.map((pro) => (
             <TableRow key={pro.id}>
-              <TableCell>{pro.category?.name}</TableCell>
+              <TableCell>{pro.categories.name}</TableCell>
               <TableCell>{pro.name}</TableCell>
               <TableCell className='text-center'>{pro.price}</TableCell>
-              <TableCell width={30}><button onClick={() => handleDelete(pro.id)}><Trash2 className='w-4 h-4' /></button></TableCell>
+              <TableCell width={30}><button onClick={() => handleDelete(String(pro.id))}><Trash2 className='w-4 h-4' /></button></TableCell>
             </TableRow>
           ))}
         </TableBody>
