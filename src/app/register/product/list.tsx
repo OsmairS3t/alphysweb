@@ -43,7 +43,7 @@ import { Input } from '@aw/components/ui/input';
 import { PlusCircle, Search, Trash2 } from 'lucide-react';
 
 const formSchema = z.object({
-  category: z.string({
+  categoryname: z.string({
     required_error: "Informe uma categoria",
   }),
   name: z.string().min(2, {
@@ -55,23 +55,14 @@ const formSchema = z.object({
   photo: z.string(),
 })
 
-interface ProductCategory {
-  id: number;
-  name: string;
-  price: number;
-  photo: string;
-  categories: ICategory;
-}
-
 export default function ListProduct() {
   const [search, setSearch] = useState('')
   const [categories, setCategories] = useState<ICategory[]>([])
-  const [productsCategory, setProductsCategory] = useState<ProductCategory[]>([])
   const [products, setProducts] = useState<IProduct[]>([])
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      category: "",
+      categoryname: "",
       name: "",
       price: "",
       photo: "",
@@ -85,45 +76,12 @@ export default function ListProduct() {
     }
   }
 
-  // async function getProducts(name?: string) {
-  //   if (name) {
-  //     const { data } = await supabase.from('products').select('*').like('name', name)
-  //     if (data) {
-  //       setProducts(data)
-  //     }
-  //   } else {
-  //     const { data } = await supabase.from('products').select('*')
-  //     if (data) {
-  //       setProducts(data)
-  //     }
-  //   }
-  // }
-
-  async function getProductsCategory() {
-    const { data, error } = await supabase
-      .from('products')
-      .select('id, name, price, photo, categories!inner(id, name)')
+  async function getProducts() {
+    const { data } = await supabase
+      .from('products').select('id, categoryname, name, price, photo')
     if (data) {
-      setProductsCategory(data)
       console.log(data)
-    } else {
-      console.log(error)
-    }
-  }
-
-  async function onSubmit(values: z.infer<typeof formSchema>) {
-    try {
-      await supabase.from('products').insert({
-        categoryid: Number(values.category),
-        name: values.name,
-        price: Number(values.price),
-        photo: values.photo
-      })
-      alert('Produto incluído com sucesso!')
-      form.reset()
-      getProductsCategory()
-    } catch (error) {
-      console.log(error)
+      setProducts(data)
     }
   }
 
@@ -139,10 +97,25 @@ export default function ListProduct() {
     }
   }
 
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    try {
+      await supabase.from('products').insert({
+        categoryname: values.categoryname,
+        name: values.name,
+        price: Number(values.price),
+        photo: values.photo
+      })
+      alert('Produto incluído com sucesso!')
+      form.reset()
+      getProducts()
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
   useEffect(() => {
     getCategories()
-    // getProducts()
-    getProductsCategory()
+    getProducts()
   }, [])
 
   return (
@@ -152,7 +125,7 @@ export default function ListProduct() {
         <form className='flex flex-row gap-2'>
           <Input name="search" id='search' placeholder='Localizar' />
           <Button type='submit' variant="outline">
-            <Search className='w-4 h-4 mr-2' onClick={() => getProductsCategory()} />Buscar</Button>
+            <Search className='w-4 h-4 mr-2' onClick={() => getProducts()} />Buscar</Button>
         </form>
 
         <Dialog>
@@ -170,7 +143,7 @@ export default function ListProduct() {
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <FormField
                   control={form.control}
-                  name="category"
+                  name="categoryname"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Categoria</FormLabel>
@@ -182,7 +155,7 @@ export default function ListProduct() {
                         </FormControl>
                         <SelectContent>
                           {categories.map(cat => (
-                            <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+                            <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -259,11 +232,14 @@ export default function ListProduct() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {productsCategory.map((pro) => (
+          {products.map((pro) => (
             <TableRow key={pro.id}>
-              <TableCell>{pro.categories.name}</TableCell>
+              <TableCell>{pro.categoryname}</TableCell>
               <TableCell>{pro.name}</TableCell>
-              <TableCell className='text-center'>{pro.price}</TableCell>
+              <TableCell className='text-center'>
+                {Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
+                  .format(pro.price)}
+              </TableCell>
               <TableCell width={30}><button onClick={() => handleDelete(String(pro.id))}><Trash2 className='w-4 h-4' /></button></TableCell>
             </TableRow>
           ))}

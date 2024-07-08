@@ -44,11 +44,11 @@ import { PlusCircle, Search, SearchCheckIcon, Trash2 } from 'lucide-react';
 import { Switch } from '@aw/components/ui/switch';
 
 const formSchema = z.object({
-  client: z
+  client_name: z
     .string({
       required_error: "É necessário selecionar uma cliente.",
     }),
-  product: z.string({
+  product_name: z.string({
     message: "É necessário selecionar um produto.",
   }),
   amount: z.string().min(1, {
@@ -65,16 +65,21 @@ export default function ListSale() {
   const [clients, setClients] = useState<IClient[]>([])
   const [products, setProducts] = useState<IProduct[]>([])
   const [sales, setSales] = useState<ISale[]>([])
+  const [isPay, setIsPay] = useState(false)
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      client: "",
-      product: "",
+      client_name: "",
+      product_name: "",
       amount: "",
       price: "",
       ispaid: false
     },
   })
+
+  function handleChangeSales() {
+    setIsPay(!isPay)
+  }
 
   async function getClients() {
     const { data } = await supabase.from('clients').select('*').order('name')
@@ -98,12 +103,11 @@ export default function ListSale() {
       }
     } else {
       if (search) {
-        const searchid = 2  //localizar no banco o id do produto
         if (searchType === 'product') {
           const { data } = await supabase
             .from('sales')
             .select('*')
-            .eq('productid', searchid)
+            .eq('product_name', search)
             .order('datesale')
           if (data) {
             setSales(data)
@@ -112,7 +116,7 @@ export default function ListSale() {
           const { data } = await supabase
             .from('sales')
             .select('*')
-            .eq('productid', searchid)
+            .eq('client_name', search)
             .order('datesale')
           if (data) {
             setSales(data)
@@ -123,14 +127,16 @@ export default function ListSale() {
   }
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    let dataAtual = new Date();
+    let dataFormatada = dataAtual.toISOString();
     try {
       await supabase.from('sales').insert({
-        clientid: values.client,
-        productid: values.product,
+        client_name: values.client_name,
+        product_name: values.product_name,
         amount: Number(values.amount),
         price: Number(values.price),
         ispaid: values.ispaid,
-        datesale: new Date().getDate()
+        datesale: dataFormatada
       })
       alert('venda incluída com sucesso!')
       form.reset()
@@ -160,12 +166,12 @@ export default function ListSale() {
 
   return (
     <div>
-      <h2 className='p-2 text-lg font-semibold my-2'>Cadastro de Produtos</h2>
+      <h2 className='p-2 text-lg font-semibold my-2'>Cadastro de Vendas</h2>
       <div className='flex items-center justify-between gap-4 mb-4'>
         <form className='flex flex-row gap-2'>
           <Input name="search" id='search' placeholder='Localizar' />
           <Button type='submit' variant="outline">
-            <Search className='w-4 h-4 mr-2' onClick={() => getSales()} />Buscar</Button>
+            <Search className='w-4 h-4 mr-2' onClick={() => getSales()} />Filtrar</Button>
         </form>
 
         <Dialog>
@@ -183,7 +189,7 @@ export default function ListSale() {
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <FormField
                   control={form.control}
-                  name="client"
+                  name="client_name"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Cliente:</FormLabel>
@@ -195,7 +201,7 @@ export default function ListSale() {
                         </FormControl>
                         <SelectContent>
                           {clients.map(cli => (
-                            <SelectItem key={cli.id} value={cli.id}>{cli.name}</SelectItem>
+                            <SelectItem key={cli.id} value={cli.name}>{cli.name}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -206,7 +212,7 @@ export default function ListSale() {
 
                 <FormField
                   control={form.control}
-                  name="product"
+                  name="product_name"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Produto:</FormLabel>
@@ -218,7 +224,7 @@ export default function ListSale() {
                         </FormControl>
                         <SelectContent>
                           {products.map(pro => (
-                            <SelectItem key={pro.id} value={pro.id}>{pro.name}</SelectItem>
+                            <SelectItem key={pro.id} value={pro.name}>{pro.name}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -266,13 +272,17 @@ export default function ListSale() {
                     <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                       <div className="space-y-0.5">
                         <FormLabel className="text-base">
-                          Pagamento
+                          Está pago?
                         </FormLabel>
+                        <span className='ml-4'>
+                          {isPay ? "Sim" : "Não"}
+                        </span>
                       </div>
                       <FormControl>
                         <Switch
                           checked={field.value}
                           onCheckedChange={field.onChange}
+                          onClick={handleChangeSales}
                         />
                       </FormControl>
                     </FormItem>
@@ -295,6 +305,7 @@ export default function ListSale() {
       <Table>
         <TableHeader>
           <TableRow>
+            <TableHead className='font-bold text-md w-32'>Data</TableHead>
             <TableHead className='font-bold text-md w-32'>Cliente</TableHead>
             <TableHead className='font-bold text-md w-32'>Produto</TableHead>
             <TableHead className='font-bold text-md'>Quant.</TableHead>
@@ -302,18 +313,29 @@ export default function ListSale() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {products.map((pro) => (
-            <TableRow key={pro.id}>
-              <TableCell>{pro.category?.name}</TableCell>
-              <TableCell>{pro.name}</TableCell>
-              <TableCell className='text-right'>{pro.price}</TableCell>
-              <TableCell width={30}><button onClick={() => handleDelete(pro.id)}><Trash2 className='w-4 h-4' /></button></TableCell>
+          {sales.map((sale) => (
+            <TableRow key={sale.id}>
+              <TableCell>
+                {Intl.DateTimeFormat('pt-BR', {
+                  day: '2-digit',
+                  month: '2-digit',
+                  year: 'numeric'
+                }).format(sale.dateSale)}
+              </TableCell>
+              <TableCell>{sale.client_name}</TableCell>
+              <TableCell>{sale.product_name}</TableCell>
+              <TableCell className='text-right'>{sale.amount}</TableCell>
+              <TableCell className='text-right'>{sale.price}</TableCell>
+              <TableCell width={30}>
+                <button onClick={() => handleDelete(sale.id)}>
+                  <Trash2 className='w-4 h-4' /></button>
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>
         <TableFooter>
           <TableRow>
-            <TableCell colSpan={4} className="text-right">Total: {products.length}</TableCell>
+            <TableCell colSpan={6} className="text-right">Total: {sales.length}</TableCell>
           </TableRow>
         </TableFooter>
       </Table>

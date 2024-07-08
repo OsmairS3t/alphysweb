@@ -44,13 +44,12 @@ import { PlusCircle, Search, Trash2 } from 'lucide-react';
 import { Switch } from '@aw/components/ui/switch';
 
 const formSchema = z.object({
-  product: z.string({
+  product_name: z.string({
     message: "É necessário selecionar um produto.",
   }),
   amount: z.string().min(1, {
     message: "É necessário informar ao menos 1 quantidade."
   }),
-  hasstock: z.boolean(),
 })
 
 export default function ListStock() {
@@ -61,15 +60,10 @@ export default function ListStock() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      product: "",
+      product_name: "",
       amount: "",
-      hasstock: false
     },
   })
-
-  function handleChangeStock() {
-    setStock(!stock)
-  }
 
   async function getProducts() {
     const { data } = await supabase.from('products').select('*').order('name')
@@ -79,9 +73,8 @@ export default function ListStock() {
   }
 
   async function getStocks(search?: string) {
-    const searchid = 1
     if (search) {
-      const { data } = await supabase.from('stocks').select('*').eq('productid', searchid)
+      const { data } = await supabase.from('stocks').select('*').eq('product_name', search)
       if (data) {
         setStocks(data)
       }
@@ -95,12 +88,12 @@ export default function ListStock() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
-      await supabase.from('sales').insert({
-        productid: values.product,
+      await supabase.from('stocks').insert({
+        product_name: values.product_name,
         amount: Number(values.amount),
-        hasstock: values.hasstock,
+        hasstock: true,
       })
-      alert('venda incluída com sucesso!')
+      alert('Produto incluído no estoque com sucesso!')
       form.reset()
       getStocks()
     } catch (error) {
@@ -109,10 +102,10 @@ export default function ListStock() {
   }
 
   async function handleDelete(id: string) {
-    if (confirm("Tem certeza que deseja excluir esta venda?")) {
+    if (confirm("Tem certeza que deseja excluir este produto do estoque?")) {
       try {
-        await supabase.from('sales').delete().eq('id', id)
-        alert('Venda excluida com sucesso!')
+        await supabase.from('stocks').delete().eq('id', id)
+        alert('Produto removido do estoque com sucesso!')
         getStocks()
       } catch (error) {
         console.log(error)
@@ -150,7 +143,7 @@ export default function ListStock() {
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <FormField
                   control={form.control}
-                  name="product"
+                  name="product_name"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Produto:</FormLabel>
@@ -162,7 +155,7 @@ export default function ListStock() {
                         </FormControl>
                         <SelectContent>
                           {products.map(pro => (
-                            <SelectItem key={pro.id} value={pro.id}>{pro.name}</SelectItem>
+                            <SelectItem key={pro.id} value={pro.name}>{pro.name}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -183,30 +176,6 @@ export default function ListStock() {
                       <FormDescription>
                       </FormDescription>
                       <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="hasstock"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                      <div className="space-y-0.5 flex flex-row justify-between">
-                        <FormLabel className="text-base">
-                          Tem no estoque?
-                        </FormLabel>
-                        <span className='ml-4'>
-                          {stock ? "Sim" : "Não"}
-                        </span>
-                      </div>
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                          onClick={handleChangeStock}
-                        />
-                      </FormControl>
                     </FormItem>
                   )}
                 />
@@ -234,7 +203,7 @@ export default function ListStock() {
         <TableBody>
           {stocks.map((stk) => (
             <TableRow key={stk.id}>
-              <TableCell>{stk.product?.name}</TableCell>
+              <TableCell>{stk.product_name}</TableCell>
               <TableCell>{stk.amount}</TableCell>
               <TableCell width={30}><button onClick={() => handleDelete(stk.id)}><Trash2 className='w-4 h-4' /></button></TableCell>
             </TableRow>
