@@ -1,6 +1,6 @@
 'use client'
-import React, { useEffect, useState } from 'react';
-import { IBuy, IRecipe } from '@aw/utils/interface';
+import React, { ChangeEvent, useEffect, useState } from 'react';
+import { IIngredient, IRecipe } from '@aw/utils/interface';
 import { supabase } from '@aw/lib/database';
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
@@ -31,6 +31,7 @@ import {
 import { Input } from '@aw/components/ui/input';
 import { PlusCircle, Search, Trash2 } from 'lucide-react';
 import { Textarea } from '@aw/components/ui/textarea';
+import FormIngredient from '@aw/components/forms/frmIngredient';
 
 const formSchema = z.object({
   nameproduct: z.string().min(2, {
@@ -45,8 +46,10 @@ const formSchema = z.object({
 })
 
 export default function ListRecipe() {
+  const [idRecipe, setIdRecipe] = useState('')
   const [search, setSearch] = useState('')
   const [recipes, setRecipes] = useState<IRecipe[]>([])
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -69,6 +72,7 @@ export default function ListRecipe() {
         nameproduct: values.nameproduct,
         preparation: values.preparation,
         cooking: values.cooking,
+        ingredients: []
       })
       alert('Receita incluída com sucesso!')
       form.reset()
@@ -76,6 +80,15 @@ export default function ListRecipe() {
     } catch (error) {
       console.log(error)
     }
+  }
+
+  const closeDialog = () => {
+    setIsDialogOpen(false);
+  };
+  
+  function handleAddIngredient(id: string) {
+    setIsDialogOpen(true);
+    setIdRecipe(id)
   }
 
   async function handleDelete(id: string) {
@@ -112,7 +125,7 @@ export default function ListRecipe() {
 
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Nova Compra</DialogTitle>
+              <DialogTitle>Nova Receita</DialogTitle>
             </DialogHeader>
 
             <Form {...form}>
@@ -162,6 +175,7 @@ export default function ListRecipe() {
                     </FormItem>
                   )}
                 />
+
                 <div className='flex flex-row justify-end gap-2'>
                   <DialogClose>
                     <Button type='button' variant="outline">Cancelar</Button>
@@ -171,17 +185,26 @@ export default function ListRecipe() {
               </form>
             </Form>
           </DialogContent>
-
         </Dialog> 
+
+        <Dialog open={isDialogOpen} onOpenChange={closeDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Adicionar Ingredientes</DialogTitle>
+            </DialogHeader>
+            <label>Ingredientes:</label>
+            <FormIngredient idrecipe={idRecipe} />
+          </DialogContent>
+        </Dialog>
       </div>
 
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className='font-bold text-md w-32'>Produto</TableHead>
-            <TableHead className='font-bold text-md w-32'>Preparo</TableHead>
+            <TableHead className='font-bold text-md w-52'>Produto</TableHead>
+            <TableHead className='font-bold text-md'>Preparo</TableHead>
             <TableHead className='font-bold text-md'>Cozimento</TableHead>
-            <TableHead className='font-bold text-md'>Ingredientes</TableHead>
+            <TableHead className='font-bold text-md w-48'>Ingredientes</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -190,7 +213,14 @@ export default function ListRecipe() {
               <TableCell>{rec.nameproduct}</TableCell>
               <TableCell>{rec.preparation}</TableCell>
               <TableCell>{rec.cooking}</TableCell>
-              <TableCell width={30}><button onClick={() => handleDelete(rec.id)}><Trash2 className='w-4 h-4' /></button></TableCell>
+              <TableCell width={50} className='flex flex-row gap-4 w-48 justify-between'>
+                <button onClick={() => handleAddIngredient(rec.id)}>
+                  + Ingredientes
+                </button>
+                <button onClick={() => handleDelete(rec.id)}>
+                  <Trash2 className='w-4 h-4' />
+                </button>
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>

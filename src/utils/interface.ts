@@ -46,8 +46,8 @@ export interface ISale {
 }
 export interface IOrder {
   id: string;
-  client: IClient | undefined;
-  product: IProduct | undefined;
+  client_name: string;
+  product_name: string;
   amount: number;
   price: number;
   obs: string;

@@ -1,6 +1,6 @@
 'use client'
 import React, { useEffect, useState } from 'react';
-import { ICategory, IOrder } from '@aw/utils/interface';
+import { IClient, IOrder, IProduct } from '@aw/utils/interface';
 import { supabase } from '@aw/lib/database';
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
@@ -31,28 +31,45 @@ import {
 import { Input } from '@aw/components/ui/input';
 import { PlusCircle, Search, Trash2 } from 'lucide-react';
 import { Textarea } from '@aw/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@aw/components/ui/select';
 
 const formSchema = z.object({
-  client: z.number(),
-  product: z.number(),
-  amount: z.number(),
-  price: z.number(),
+  client_name: z.string(),
+  product_name: z.string(),
+  amount: z.string(),
+  price: z.string(),
   obs: z.string()
 })
 
 export default function ListCategory() {
   const [search, setSearch] = useState('')
+  const [clients, setClients] = useState<IClient[]>([])
+  const [products, setProducts] = useState<IProduct[]>([])
   const [orders, setOrders] = useState<IOrder[]>([])
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      client: 0,
-      product: 0,
-      amount: 0,
-      price: 0,
+      client_name: "",
+      product_name: "",
+      amount: "",
+      price: "",
       obs: ""
     },
   })
+
+  async function getClients() {
+    const { data } = await supabase.from('clients').select('*').order('name')
+    if (data) {
+      setClients(data)
+    }
+  }
+
+  async function getProducts() {
+    const { data } = await supabase.from('products').select('*').order('name')
+    if (data) {
+      setProducts(data)
+    }
+  }
 
   async function getOrders(name?: string) {
     if(name) {
@@ -71,10 +88,10 @@ export default function ListCategory() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
       await supabase.from('orders').insert({ 
-        client: values.client,
-        product: values.product,
-        amount: values.amount,
-        price: values.price,
+        client_name: values.client_name,
+        product_name: values.product_name,
+        amount: Number(values.amount),
+        price: Number(values.price),
         obs: values.obs
       })
       alert('Encomenda incluída com sucesso!')
@@ -98,6 +115,8 @@ export default function ListCategory() {
   }
 
   useEffect(() => {
+    getClients()
+    getProducts()
     getOrders()
   },[])
 
@@ -124,32 +143,46 @@ export default function ListCategory() {
 
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <FormField
+              <FormField
                   control={form.control}
-                  name='client'
+                  name="client_name"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Cliente:</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Nome do Cliente" {...field} />
-                      </FormControl>
-                      <FormDescription>
-                      </FormDescription>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione o(a) cliente" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {clients.map(cli => (
+                            <SelectItem key={cli.id} value={cli.name}>{cli.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
                 <FormField
                   control={form.control}
-                  name='product'
+                  name="product_name"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Produto:</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Nome do Produto" {...field} />
-                      </FormControl>
-                      <FormDescription>
-                      </FormDescription>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione o produto" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {products.map(pro => (
+                            <SelectItem key={pro.id} value={pro.name}>{pro.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -224,17 +257,19 @@ export default function ListCategory() {
         <TableBody>
           {orders.map((ord) => (
             <TableRow key={ord.id}>
-              <TableCell>{ord.client?.name}</TableCell>
-              <TableCell>{ord.product?.name}</TableCell>
+              <TableCell>{ord.client_name}</TableCell>
+              <TableCell>{ord.product_name}</TableCell>
               <TableCell>{ord.amount}</TableCell>
-              <TableCell>{ord.price}</TableCell>
+              <TableCell>
+                {Intl.NumberFormat('pt-BR', {style: 'currency', currency: 'BRL'}).format(ord.price)}
+              </TableCell>
               <TableCell width={30}><button onClick={() => handleDelete(ord.id)}><Trash2 className='w-4 h-4' /></button></TableCell>
             </TableRow>
           ))}
         </TableBody>
         <TableFooter>
           <TableRow>
-            <TableCell colSpan={4} className="text-right">Total: {orders.length}</TableCell>
+            <TableCell colSpan={5} className="text-right">Total: {orders.length}</TableCell>
           </TableRow>
         </TableFooter>
       </Table>
