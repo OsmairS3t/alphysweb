@@ -128,7 +128,11 @@ export default function ListSale() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     let dataAtual = new Date();
-    let dataFormatada = dataAtual.toISOString();
+    let day = String(dataAtual.getDate()).padStart(2, '0');
+    let month = String(dataAtual.getMonth() + 1).padStart(2, '0'); // getMonth() retorna meses de 0 a 11
+    let year = dataAtual.getFullYear();
+    let dataFormatada = day +'/'+ month +'/'+ year;
+    console.log(dataFormatada)
     try {
       await supabase.from('sales').insert({
         client_name: values.client_name,
@@ -224,7 +228,7 @@ export default function ListSale() {
                         </FormControl>
                         <SelectContent>
                           {products.map(pro => (
-                            <SelectItem key={pro.id} value={pro.name}>{pro.name}</SelectItem>
+                            <SelectItem key={pro.id} value={pro.categoryname+' - '+pro.name}>{pro.categoryname+' - '+pro.name}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -305,28 +309,25 @@ export default function ListSale() {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className='font-bold text-md w-32'>Data</TableHead>
-            <TableHead className='font-bold text-md w-32'>Cliente</TableHead>
-            <TableHead className='font-bold text-md w-32'>Produto</TableHead>
-            <TableHead className='font-bold text-md'>Quant.</TableHead>
-            <TableHead className='font-bold text-md'>Preço</TableHead>
+            <TableHead className='font-bold text-md'>Data</TableHead>
+            <TableHead className='font-bold text-md'>Cliente</TableHead>
+            <TableHead className='font-bold text-md'>Produto</TableHead>
+            <TableHead className='font-bold text-md w-32'>Quant.</TableHead>
+            <TableHead className='font-bold text-md w-32 text-center'>Preço</TableHead>
+            <TableHead className='font-bold text-md w-24'></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {sales.map((sale) => (
             <TableRow key={sale.id}>
-              <TableCell>
-                {Intl.DateTimeFormat('pt-BR', {
-                  day: '2-digit',
-                  month: '2-digit',
-                  year: 'numeric'
-                }).format(sale.dateSale)}
-              </TableCell>
+              <TableCell>{sale.datesale}</TableCell>
               <TableCell>{sale.client_name}</TableCell>
               <TableCell>{sale.product_name}</TableCell>
               <TableCell className='text-right'>{sale.amount}</TableCell>
-              <TableCell className='text-right'>{sale.price}</TableCell>
-              <TableCell width={30}>
+              <TableCell className='text-right'>
+                {Intl.NumberFormat('pt-BR', {style: 'currency', currency: 'BRL'}).format(sale.price)}
+              </TableCell>
+              <TableCell className='w-32 text-center'>
                 <button onClick={() => handleDelete(sale.id)}>
                   <Trash2 className='w-4 h-4' /></button>
               </TableCell>
@@ -335,7 +336,12 @@ export default function ListSale() {
         </TableBody>
         <TableFooter>
           <TableRow>
-            <TableCell colSpan={6} className="text-right">Total: {sales.length}</TableCell>
+            <TableCell colSpan={6} className="text-right">
+              Total: {Intl.NumberFormat('pt-BR', {style: 'currency', currency: 'BRL'})
+                          .format(sales.reduce((accumulator, currentItem) => {
+                      return accumulator + currentItem.price;
+                     }, 0))}
+            </TableCell>
           </TableRow>
         </TableFooter>
       </Table>

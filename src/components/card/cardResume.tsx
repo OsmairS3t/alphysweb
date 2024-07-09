@@ -15,13 +15,15 @@ export default function CardResume({title, price, icon, period}: Props) {
         <p className='text-sm'>{title}</p>
         <p className='text-sm'>
           {icon ? (
-            icon === '+' ? <FiPlusCircle size={20} /> : <FiMinusCircle size={20} />
+            icon === '+' ? <FiPlusCircle size={20} className='text-blue-700' /> : <FiMinusCircle size={20} className='text-red-700' />
           ) : 
-            <FiDollarSign size={20} />
+            <FiDollarSign size={20} className='text-green-700' />
           }
         </p>
       </div>
-      <div className='text-xl font-bold'>R$ {price}</div>
+      <div className='text-xl font-bold'>
+        {Intl.NumberFormat('pt-BR', {style: 'currency', currency: 'BRL'}).format(Number(price))}
+      </div>
       <div className='text-sm'>
         <p>{period}</p>
       </div>

@@ -18,7 +18,6 @@ import { supabase } from '@aw/lib/database';
 import { DialogClose } from '../ui/dialog';
 
 const frmIngredSchema = z.object({
-  id: z.string(),
   name: z.string(),
   amount: z.string(),
   conditions: z.string()
@@ -30,7 +29,7 @@ type IngredientRecipeProps = {
 
 export default function FormIngredient({ idrecipe }:IngredientRecipeProps) {
   const [ingredients, setIngredients] = useState<IIngredient[]>([]);
-  const [recipe, setRecipe] = useState<IRecipe[]>([])
+  const [recipe, setRecipe] = useState<IRecipe>()
   const frmIngred = useForm<z.infer<typeof frmIngredSchema>>({
     defaultValues: {
       name: '',
@@ -43,7 +42,9 @@ export default function FormIngredient({ idrecipe }:IngredientRecipeProps) {
     try {
       const { data } = await supabase.from('recipes').select('*').eq('id', Number(id))
       if (data) {
-        setRecipe(data)
+        data.map(item => {
+          setRecipe(item)
+        })
       }
     } catch (error) {
       console.log(error)
@@ -52,12 +53,22 @@ export default function FormIngredient({ idrecipe }:IngredientRecipeProps) {
 
   async function onSubmit(values: z.infer<typeof frmIngredSchema>) {
     try {
-      await supabase.from('recipes').insert({ 
-        name: values.name,
-        amount: values.amount,
-        conditions: values.conditions,
-      })
-      alert('Receita incluída com sucesso!')
+      const { data } = await supabase
+        .from('recipes')
+        .select('ingredients')
+        .eq('id', recipe?.id)
+      let ingredients: IIngredient[] = []
+      if (data) {
+        data.map(item => {
+          ingredients = item.ingredients
+        })
+      }
+      ingredients.push(values)
+      await supabase
+        .from('recipes')
+        .update({"ingredients": ingredients})
+        .eq('id', recipe?.id)
+      alert('Ingrediente incluído com sucesso!')
       frmIngred.reset()
     } catch (error) {
       console.log(error)
@@ -69,6 +80,7 @@ export default function FormIngredient({ idrecipe }:IngredientRecipeProps) {
   },[])
 
   return (
+    <>
     <Form {...frmIngred}>
       <form onSubmit={frmIngred.handleSubmit(onSubmit)} className="space-y-4">
         <FormField
@@ -76,9 +88,9 @@ export default function FormIngredient({ idrecipe }:IngredientRecipeProps) {
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Nome do produto:</FormLabel>
+              <FormLabel>Ingrediente:</FormLabel>
               <FormControl>
-                <Input placeholder="Nome do produto" {...field} />
+                <Input placeholder="Nome do ingrediente" {...field} />
               </FormControl>
               <FormDescription>
               </FormDescription>
@@ -127,6 +139,6 @@ export default function FormIngredient({ idrecipe }:IngredientRecipeProps) {
         </div>
     </form>
   </Form>
-
+  </>
   )
 }

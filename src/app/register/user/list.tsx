@@ -204,7 +204,7 @@ export default function ListUser() {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead colSpan={2} className='font-bold text-md'>Nome</TableHead>
+            <TableHead className='font-bold text-md'>Nome</TableHead>
             <TableHead colSpan={2} className='font-bold text-md'>E-mail</TableHead>
           </TableRow>
         </TableHeader>
@@ -213,7 +213,11 @@ export default function ListUser() {
             <TableRow key={user.email}>
               <TableCell>{user.name}</TableCell>
               <TableCell>{user.email}</TableCell>
-              <TableCell width={30}><button onClick={() => handleDelete(user.email)}><Trash2 className='w-4 h-4' /></button></TableCell>
+              <TableCell width={30}>
+                <button onClick={() => handleDelete(user.email)}>
+                  <Trash2 className='w-4 h-4' />
+                </button>
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>

@@ -1,3 +1,4 @@
+import { ISale } from '@aw/utils/interface';
 import React from 'react';
 
 type dataProps = {
@@ -9,7 +10,7 @@ type dataProps = {
 }
 
 interface Props {
-  data: dataProps[];
+  data: ISale[];
 }
 
 export default function LastRecords({ data }: Props) {
@@ -20,12 +21,12 @@ export default function LastRecords({ data }: Props) {
         {data.map(item => (
           <li key={item.id} className='flex flex-row w-full flex-wrap justify-between items-center p-2'>
             <div className='flex flex-col'>
-              <p className='font-semibold text-lg'>{item.name}</p>
-              <p className='text-sm'>{item.product}</p>
+              <p className='font-semibold text-lg'>{item.client_name}</p>
+              <p className='text-sm'>{item.product_name}</p>
             </div>
             <div className='flex flex-col'>
               <p className='text-sm'>{item.amount} itens</p>
-              <p>R$ {item.price}</p>
+              <p>{Intl.NumberFormat('pt-BR', {style: 'currency', currency: 'BRL'}).format(item.price)}</p>
             </div>
           </li>
         ))}

@@ -42,7 +42,7 @@ export interface ISale {
   amount: number;
   price: number;
   isPaid: boolean;
-  dateSale: Date;
+  datesale: string;
 }
 export interface IOrder {
   id: string;
@@ -53,7 +53,6 @@ export interface IOrder {
   obs: string;
 }
 export interface IIngredient {
-  id: string;
   name: string;
   amount: string;
   conditions: string;
@@ -66,15 +65,17 @@ export interface IRecipe {
   cooking: string;
 }
 export interface ITransaction {
-  id: string;
-  description: string;
-  modality: string;
-  color: string;
-  datetransaction: string;
-  amount: number;
+  title: string;
   price: string;
+  period: string;
+  icon?: string;
 }
-
+export interface IChartData {
+  name: string;
+  compras: number;
+  vendas: number;
+  saldo: number;
+}
 
 //===TABLES===/
 // buys

@@ -155,7 +155,7 @@ export default function ListStock() {
                         </FormControl>
                         <SelectContent>
                           {products.map(pro => (
-                            <SelectItem key={pro.id} value={pro.name}>{pro.name}</SelectItem>
+                            <SelectItem key={pro.id} value={pro.categoryname +'-'+pro.name}>{pro.categoryname} - {pro.name}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -196,22 +196,24 @@ export default function ListStock() {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className='font-bold text-md w-32'>Produto</TableHead>
-            <TableHead className='font-bold text-md'>Quant.</TableHead>
+            <TableHead className='font-bold text-md'>Produto</TableHead>
+            <TableHead className='font-bold text-md text-center w-96'>Quantidade</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {stocks.map((stk) => (
             <TableRow key={stk.id}>
               <TableCell>{stk.product_name}</TableCell>
-              <TableCell>{stk.amount}</TableCell>
+              <TableCell className='text-center'>{stk.amount}</TableCell>
               <TableCell width={30}><button onClick={() => handleDelete(stk.id)}><Trash2 className='w-4 h-4' /></button></TableCell>
             </TableRow>
           ))}
         </TableBody>
         <TableFooter>
           <TableRow>
-            <TableCell colSpan={4} className="text-right">Total: {stocks.length}</TableCell>
+            <TableCell colSpan={4} className="text-right">
+              Total de produtos no estoque: {stocks.length}
+            </TableCell>
           </TableRow>
         </TableFooter>
       </Table>

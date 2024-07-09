@@ -55,6 +55,7 @@ const formSchema = z.object({
 export default function ListBuy() {
   const [search, setSearch] = useState('')
   const [buys, setBuys] = useState<IBuy[]>([])
+  let totalPrice = 0
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -79,6 +80,9 @@ export default function ListBuy() {
         setBuys(data)
       }
     }
+    totalPrice = buys.reduce((accumulator, currentItem) => {
+      return accumulator + currentItem.price;
+    }, 0);
   }
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
@@ -249,7 +253,8 @@ export default function ListBuy() {
             <TableHead className='font-bold text-md'>Local</TableHead>
             <TableHead className='font-bold text-md'>Produto</TableHead>
             <TableHead className='font-bold text-md w-32'>Quant.</TableHead>
-            <TableHead className='font-bold text-md w-32'>Valor</TableHead>
+            <TableHead className='font-bold text-md w-32 text-center'>Valor</TableHead>
+            <TableHead className='font-bold text-md w-20'></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -260,14 +265,27 @@ export default function ListBuy() {
               <TableCell>{buy.place}</TableCell>
               <TableCell>{buy.name}</TableCell>
               <TableCell>{buy.amount}</TableCell>
-              <TableCell className='text-right'>{buy.price}</TableCell>
-              <TableCell width={30}><button onClick={() => handleDelete(buy.id)}><Trash2 className='w-4 h-4' /></button></TableCell>
+              <TableCell className='text-right'>
+                {Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL'}).format(buy.price)}
+              </TableCell>
+              <TableCell width={30}>
+                <button onClick={() => handleDelete(buy.id)}>
+                  <Trash2 className='w-4 h-4' />
+                </button>
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>
         <TableFooter>
           <TableRow>
-            <TableCell colSpan={7} className="text-right">Total: {buys.length}</TableCell>
+            <TableCell colSpan={6} className="text-right">
+              Total: {Intl.NumberFormat('pt-BR', {style: 'currency', currency: 'BRL'})
+                          .format(buys.reduce((accumulator, currentItem) => {
+                              return accumulator + currentItem.price;
+                              }, 0))
+                      }
+            </TableCell>
+            <TableCell></TableCell>
           </TableRow>
         </TableFooter>
       </Table>
