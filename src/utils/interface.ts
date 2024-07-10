@@ -52,6 +52,18 @@ export interface IOrder {
   price: number;
   obs: string;
 }
+export interface ITransaction {
+  id: number;
+  modality: string;
+  kind: string;
+  place: string;
+  product_name: string;
+  client_name: string;
+  amount: number;
+  price: number;
+  datetransaction: string;
+  ispaid: boolean;
+}
 export interface IIngredient {
   name: string;
   amount: string;
@@ -64,7 +76,7 @@ export interface IRecipe {
   preparation: string;
   cooking: string;
 }
-export interface ITransaction {
+export interface IResumeTransaction {
   title: string;
   price: string;
   period: string;

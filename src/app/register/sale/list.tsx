@@ -1,6 +1,6 @@
 'use client'
 import React, { useEffect, useState } from 'react';
-import { IBuy, ICategory, IClient, IProduct, ISale } from '@aw/utils/interface';
+import { IClient, IProduct, ISale, ITransaction } from '@aw/utils/interface';
 import { supabase } from '@aw/lib/database';
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
@@ -40,7 +40,7 @@ import {
   SelectValue,
 } from "@aw/components/ui/select"
 import { Input } from '@aw/components/ui/input';
-import { PlusCircle, Search, SearchCheckIcon, Trash2 } from 'lucide-react';
+import { PlusCircle, Search, Trash2 } from 'lucide-react';
 import { Switch } from '@aw/components/ui/switch';
 
 const formSchema = z.object({
@@ -57,25 +57,17 @@ const formSchema = z.object({
   price: z.string().min(1, {
     message: "É necessário informar o preço.",
   }),
-  ispaid: z.boolean(),
+  ispaid: z.boolean().optional(),
 })
 
 export default function ListSale() {
   const [search, setSearch] = useState('')
   const [clients, setClients] = useState<IClient[]>([])
   const [products, setProducts] = useState<IProduct[]>([])
-  const [sales, setSales] = useState<ISale[]>([])
+  const [sales, setSales] = useState<ITransaction[]>([])
   const [isPay, setIsPay] = useState(false)
   const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      client_name: "",
-      product_name: "",
-      amount: "",
-      price: "",
-      ispaid: false
-    },
-  })
+    resolver: zodResolver(formSchema)})
 
   function handleChangeSales() {
     setIsPay(!isPay)
@@ -97,7 +89,7 @@ export default function ListSale() {
 
   async function getSales(search?: string, searchType?: string) {
     if (!searchType) {
-      const { data } = await supabase.from('sales').select('*').order('datesale')
+      const { data } = await supabase.from('transactions').select('*').eq('modality','sale').order('datetransaction')
       if (data) {
         setSales(data)
       }
@@ -105,19 +97,21 @@ export default function ListSale() {
       if (search) {
         if (searchType === 'product') {
           const { data } = await supabase
-            .from('sales')
+            .from('transactions')
             .select('*')
+            .eq('modality','sale')
             .eq('product_name', search)
-            .order('datesale')
+            .order('datetransaction')
           if (data) {
             setSales(data)
           }
         } else {
           const { data } = await supabase
-            .from('sales')
+            .from('transactions')
             .select('*')
+            .eq('modality','sale')
             .eq('client_name', search)
-            .order('datesale')
+            .order('datetransaction')
           if (data) {
             setSales(data)
           }
@@ -129,20 +123,20 @@ export default function ListSale() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     let dataAtual = new Date();
     let day = String(dataAtual.getDate()).padStart(2, '0');
-    let month = String(dataAtual.getMonth() + 1).padStart(2, '0'); // getMonth() retorna meses de 0 a 11
+    let month = String(dataAtual.getMonth() + 1).padStart(2, '0'); //getMonth() retorna meses de 0 a 11
     let year = dataAtual.getFullYear();
     let dataFormatada = day +'/'+ month +'/'+ year;
-    console.log(dataFormatada)
     try {
-      await supabase.from('sales').insert({
+      await supabase.from('transactions').insert({
+        modality: 'sale',
         client_name: values.client_name,
         product_name: values.product_name,
         amount: Number(values.amount),
         price: Number(values.price),
         ispaid: values.ispaid,
-        datesale: dataFormatada
+        datetransaction: dataFormatada
       })
-      alert('venda incluída com sucesso!')
+      alert('Venda incluída com sucesso!')
       form.reset()
       getSales()
     } catch (error) {
@@ -150,10 +144,10 @@ export default function ListSale() {
     }
   }
 
-  async function handleDelete(id: string) {
+  async function handleDelete(id: number) {
     if (confirm("Tem certeza que deseja excluir esta venda?")) {
       try {
-        await supabase.from('sales').delete().eq('id', id)
+        await supabase.from('transactions').delete().eq('id', id)
         alert('Venda excluida com sucesso!')
         getSales()
       } catch (error) {
@@ -260,7 +254,7 @@ export default function ListSale() {
                     <FormItem>
                       <FormLabel>Preço:</FormLabel>
                       <FormControl>
-                        <Input placeholder="0.00" {...field} />
+                        <Input type='text' placeholder="0.00" {...field} />
                       </FormControl>
                       <FormDescription>
                       </FormDescription>
@@ -312,21 +306,23 @@ export default function ListSale() {
             <TableHead className='font-bold text-md'>Data</TableHead>
             <TableHead className='font-bold text-md'>Cliente</TableHead>
             <TableHead className='font-bold text-md'>Produto</TableHead>
-            <TableHead className='font-bold text-md w-32'>Quant.</TableHead>
-            <TableHead className='font-bold text-md w-32 text-center'>Preço</TableHead>
+            <TableHead className='font-bold text-md w-20'>Quant.</TableHead>
+            <TableHead className='font-bold text-md w-24 text-center'>Preço</TableHead>
+            <TableHead className='font-bold text-md w-20 text-center'>Pgto</TableHead>
             <TableHead className='font-bold text-md w-24'></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {sales.map((sale) => (
             <TableRow key={sale.id}>
-              <TableCell>{sale.datesale}</TableCell>
+              <TableCell>{sale.datetransaction}</TableCell>
               <TableCell>{sale.client_name}</TableCell>
               <TableCell>{sale.product_name}</TableCell>
               <TableCell className='text-right'>{sale.amount}</TableCell>
               <TableCell className='text-right'>
                 {Intl.NumberFormat('pt-BR', {style: 'currency', currency: 'BRL'}).format(sale.price)}
               </TableCell>
+              <TableCell className='text-center'>{sale.ispaid?'Sim':'Não'}</TableCell>
               <TableCell className='w-32 text-center'>
                 <button onClick={() => handleDelete(sale.id)}>
                   <Trash2 className='w-4 h-4' /></button>
@@ -336,12 +332,14 @@ export default function ListSale() {
         </TableBody>
         <TableFooter>
           <TableRow>
-            <TableCell colSpan={6} className="text-right">
+            <TableCell colSpan={5} className="text-right">
               Total: {Intl.NumberFormat('pt-BR', {style: 'currency', currency: 'BRL'})
                           .format(sales.reduce((accumulator, currentItem) => {
                       return accumulator + currentItem.price;
                      }, 0))}
             </TableCell>
+            <TableCell></TableCell>
+            <TableCell></TableCell>
           </TableRow>
         </TableFooter>
       </Table>

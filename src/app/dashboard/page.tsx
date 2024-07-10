@@ -4,10 +4,10 @@ import CardResume from "@aw/components/card/cardResume";
 import LastRecords from "@aw/components/LastRecords";
 import Chart from "@aw/components/ui/chart";
 import { supabase } from "@aw/lib/database";
-import { IBuy, IChartData, ISale, ITransaction } from "@aw/utils/interface";
+import { IBuy, IChartData, ISale, IResumeTransaction } from "@aw/utils/interface";
 
 export default function Dashboard() {
-  const [transaction, setTransaction] = useState<ITransaction[]>([])
+  const [transaction, setTransaction] = useState<IResumeTransaction[]>([])
   const [chartData, setChartData] = useState<IChartData[]>([])
   const [listSales, setListSales] = useState<ISale[]>([])
 
@@ -85,7 +85,7 @@ export default function Dashboard() {
     ]
     setChartData(chartTemp)
 
-    const transactionTemp:ITransaction[] = [
+    const transactionTemp:IResumeTransaction[] = [
       {
         title: 'Vendas',
         price: String(sumSale),

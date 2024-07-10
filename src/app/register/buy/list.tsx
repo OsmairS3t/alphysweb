@@ -1,8 +1,17 @@
 'use client'
 import React, { useEffect, useState } from 'react';
-import { IBuy } from '@aw/utils/interface';
+import { IBuy, ITransaction } from '@aw/utils/interface';
 import { supabase } from '@aw/lib/database';
 import { zodResolver } from "@hookform/resolvers/zod"
+import { CalendarIcon, PlusCircle, Search, Trash2 } from 'lucide-react';
+import { cn } from '@aw/lib/utils'
+import { format, formatISO } from "date-fns"
+import { Calendar } from '@aw/components/ui/calendar';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@aw/components/ui/popover'
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { Table,
@@ -29,13 +38,12 @@ import {
   FormMessage,
 } from "@aw/components/ui/form"
 import { Input } from '@aw/components/ui/input';
-import { PlusCircle, Search, Trash2 } from 'lucide-react';
 
 const formSchema = z.object({
   kind: z.string().min(2, {
     message: "O tipo deve ter ao menos 2 caracteres.",
   }),
-  name: z.string().min(2, {
+  product_name: z.string().min(2, {
     message: "O produto deve ter ao menos 2 caracteres.",
   }),
   place: z.string().min(2, {
@@ -47,35 +55,26 @@ const formSchema = z.object({
   price: z.string().min(1, {
     message: "É necessário informar o preço.",
   }),
-  datebuy: z.string().min(2, {
-    message: "A data da compra deve ser uma data válida.",
+  datetransaction: z.date({
+    required_error: "A data da movimentação é necessária",
   }),
 })
 
 export default function ListBuy() {
   const [search, setSearch] = useState('')
-  const [buys, setBuys] = useState<IBuy[]>([])
+  const [buys, setBuys] = useState<ITransaction[]>([])
   let totalPrice = 0
   const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      kind: "",
-      name: "",
-      place: "",
-      amount: "",
-      price: "",
-      datebuy: "",
-    },
-  })
+    resolver: zodResolver(formSchema)})
 
   async function getBuys(name?: string) {
     if(name) {
-      const {data} = await supabase.from('buys').select('*').like('name', name)
+      const {data} = await supabase.from('transactions').select('*').eq('modality','buy').like('name', name)
       if(data) {
         setBuys(data)
       }
     } else {
-      const {data} = await supabase.from('buys').select('*')
+      const {data} = await supabase.from('transactions').select('*').eq('modality','buy')
       if(data) {
         setBuys(data)
       }
@@ -87,13 +86,14 @@ export default function ListBuy() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
-      await supabase.from('buys').insert({ 
+      await supabase.from('transactions').insert({ 
         kind: values.kind,
-        name: values.name,
+        modality: 'buy',
         place: values.place,
+        product_name: values.product_name,
         amount: Number(values.amount),
         price: Number(values.price),
-        datebuy: values.datebuy
+        datetransaction: values.datetransaction.toLocaleDateString()
       })
       alert('Compra incluída com sucesso!')
       form.reset()
@@ -103,10 +103,10 @@ export default function ListBuy() {
     }
   }
 
-  async function handleDelete(id: string) {
+  async function handleDelete(id: number) {
     if (confirm("Tem certeza que deseja excluir esta compra?")) {
       try {
-        await supabase.from('buys').delete().eq('id', id)
+        await supabase.from('transactions').delete().eq('id', id)
         alert('Compra excluida com sucesso!')
         getBuys()
       } catch (error) {
@@ -159,7 +159,7 @@ export default function ListBuy() {
                 />
                 <FormField
                   control={form.control}
-                  name="name"
+                  name="product_name"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Nome do produto:</FormLabel>
@@ -209,7 +209,7 @@ export default function ListBuy() {
                     <FormItem>
                       <FormLabel>Preço:</FormLabel>
                       <FormControl>
-                        <Input placeholder="0.00" {...field} />
+                        <Input type='number' placeholder="0.00" {...field} />
                       </FormControl>
                       <FormDescription>
                       </FormDescription>
@@ -219,19 +219,48 @@ export default function ListBuy() {
                 />
                 <FormField
                   control={form.control}
-                  name="datebuy"
+                  name="datetransaction"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Data da compra:</FormLabel>
-                      <FormControl>
-                        <Input placeholder="dd/mm/aaaa" {...field} />
-                      </FormControl>
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Data:</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant={"outline"}
+                              className={cn(
+                                "w-[240px] pl-3 text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {field.value ? (
+                                format(field.value, "PP")
+                              ) : (
+                                <span>Informe a Data</span>
+                              )}
+                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={field.value}
+                            onSelect={field.onChange}
+                            disabled={(date) =>
+                              date > new Date() || date < new Date("1900-01-01")
+                            }
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
                       <FormDescription>
+                        Data da movimentação financeira
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
-                />
+                />                
                 <div className='flex flex-row justify-end gap-2'>
                   <DialogClose>
                     <Button type='button' variant="outline">Cancelar</Button>
@@ -260,10 +289,10 @@ export default function ListBuy() {
         <TableBody>
           {buys.map((buy) => (
             <TableRow key={buy.id}>
-              <TableCell>{buy.datebuy}</TableCell>
+              <TableCell>{buy.datetransaction}</TableCell>
               <TableCell>{buy.kind}</TableCell>
               <TableCell>{buy.place}</TableCell>
-              <TableCell>{buy.name}</TableCell>
+              <TableCell>{buy.product_name}</TableCell>
               <TableCell>{buy.amount}</TableCell>
               <TableCell className='text-right'>
                 {Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL'}).format(buy.price)}
