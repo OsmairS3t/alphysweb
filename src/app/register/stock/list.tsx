@@ -1,6 +1,6 @@
 'use client'
 import React, { useEffect, useState } from 'react';
-import { IStock, IProduct, ISale } from '@aw/utils/interface';
+import { IStock, IProduct } from '@aw/utils/interface';
 import { supabase } from '@aw/lib/database';
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"

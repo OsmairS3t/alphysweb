@@ -26,24 +26,6 @@ export interface IStock {
   amount: number;
   hasStock: boolean;
 }
-export interface IBuy {
-  id: string;
-  kind: string;
-  name: string;
-  place: string;
-  amount: number;
-  price: number;
-  datebuy: string;
-}
-export interface ISale {
-  id: string;
-  client_name: string;
-  product_name: string;
-  amount: number;
-  price: number;
-  isPaid: boolean;
-  datesale: string;
-}
 export interface IOrder {
   id: string;
   client_name: string;
@@ -88,16 +70,3 @@ export interface IChartData {
   vendas: number;
   saldo: number;
 }
-
-//===TABLES===/
-// buys
-// categories
-// clients
-// ingredients
-// ingredients_recipe
-// orders
-// products
-// recipes
-// sales
-// stocks
-// users

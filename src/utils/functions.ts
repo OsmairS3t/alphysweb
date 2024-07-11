@@ -1,3 +1,5 @@
+import { ITransaction } from "./interface"
+
 export function MonthForNumber(numberMonth: string) {
   switch(numberMonth) {
     case '01':
@@ -29,26 +31,42 @@ export function MonthForNumber(numberMonth: string) {
   }
 }
 
-interface DataObject {
-  dt: string; // data no formato 'dd/mm/aaaa'
-  // outros campos...
-}
-
-const array: DataObject[] = [
-  { dt: '01/01/2023' },
-  { dt: '10/05/2022' },
-  { dt: '07/07/2023' },
-  { dt: '25/11/2021' },
-  { dt: '15/07/2023' },
-];
-
-export function agruparPorMes(array: DataObject[]): { [key: string]: DataObject[] } {
+export function agruparPorMes(array: ITransaction[]): { [key: string]: ITransaction[] } {
   return array.reduce((acc, obj) => {
-    const mes = obj.dt.split('/')[1]; // Extrai o mês da data
+    const mes = obj.datetransaction.split('/')[1];
     if (!acc[mes]) {
       acc[mes] = [];
     }
     acc[mes].push(obj);
     return acc;
-  }, {} as { [key: string]: DataObject[] });
+  }, {} as { [key: string]: ITransaction[] });
 }
+
+export interface GroupedData {
+  month: string;
+  totals: { [tipo: string]: number };
+}
+
+export function groupByMonthAndSumByType(data: ITransaction[]): GroupedData[] {
+  const result: { [month: string]: { [tipo: string]: number } } = {};
+
+  data.forEach(item => {
+    const month = item.datetransaction.split('/')[1];
+
+    if (!result[month]) {
+      result[month] = {};
+    }
+
+    if (!result[month][item.modality]) {
+      result[month][item.modality] = 0;
+    }
+
+    result[month][item.modality] += item.price;
+  });
+
+  return Object.keys(result).map(month => ({
+    month,
+    totals: result[month],
+  }));
+}
+

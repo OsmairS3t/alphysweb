@@ -1,6 +1,6 @@
 'use client'
-import React, { ChangeEvent, useEffect, useState } from 'react';
-import { IIngredient, IRecipe } from '@aw/utils/interface';
+import React, { useEffect, useState } from 'react';
+import { IRecipe } from '@aw/utils/interface';
 import { supabase } from '@aw/lib/database';
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
@@ -29,7 +29,7 @@ import {
   FormMessage,
 } from "@aw/components/ui/form"
 import { Input } from '@aw/components/ui/input';
-import { PlusCircle, Search, Trash2 } from 'lucide-react';
+import { PlusCircle, Search, Trash2, ScanEye } from 'lucide-react';
 import { Textarea } from '@aw/components/ui/textarea';
 import FormIngredient from '@aw/components/forms/frmIngredient';
 
@@ -50,6 +50,7 @@ export default function ListRecipe() {
   const [search, setSearch] = useState('')
   const [recipes, setRecipes] = useState<IRecipe[]>([])
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [isRecipeOpen, setIsRecipeOpen] = useState(false)
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -85,7 +86,15 @@ export default function ListRecipe() {
   const closeDialog = () => {
     setIsDialogOpen(false);
   };
-  
+
+  const closeRecipeDialog = () => {
+    setIsRecipeOpen(false);
+  };
+
+  const openRecipeDialog = (id: string) => {
+    setIsRecipeOpen(true)
+  }
+
   function handleAddIngredient(id: string) {
     setIsDialogOpen(true);
     setIdRecipe(id)
@@ -196,6 +205,13 @@ export default function ListRecipe() {
             <FormIngredient idrecipe={idRecipe} />
           </DialogContent>
         </Dialog>
+
+        <Dialog open={isRecipeOpen} onOpenChange={closeRecipeDialog}>
+          <DialogContent>
+            <DialogTitle>Receita</DialogTitle>
+            
+          </DialogContent>
+        </Dialog>
       </div>
 
       <Table>
@@ -204,7 +220,9 @@ export default function ListRecipe() {
             <TableHead className='font-bold text-md w-52'>Produto</TableHead>
             <TableHead className='font-bold text-md'>Preparo</TableHead>
             <TableHead className='font-bold text-md'>Cozimento</TableHead>
-            <TableHead className='font-bold text-md w-48'>Ingredientes</TableHead>
+            <TableHead className='font-bold text-md text-center'>Ingredientes</TableHead>
+            <TableHead className='font-bold text-md w-32'></TableHead>
+            <TableHead className='font-bold text-md'></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -213,10 +231,20 @@ export default function ListRecipe() {
               <TableCell>{rec.nameproduct}</TableCell>
               <TableCell>{rec.preparation}</TableCell>
               <TableCell>{rec.cooking}</TableCell>
-              <TableCell width={50} className='flex flex-row gap-4 w-48 justify-between'>
+              <TableCell className='flex flex-row gap-4 justify-around'>
                 <button onClick={() => handleAddIngredient(rec.id)}>
                   + Ingredientes
                 </button>
+              </TableCell>
+              <TableCell>
+                <button 
+                  onClick={() => openRecipeDialog(rec.id)}
+                  className='border-[1px] border-blue-300 p-2'
+                >
+                  Ver Receita
+                </button>
+              </TableCell>
+              <TableCell className='text-right pr-4'>
                 <button onClick={() => handleDelete(rec.id)}>
                   <Trash2 className='w-4 h-4' />
                 </button>

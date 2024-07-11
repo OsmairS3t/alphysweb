@@ -43,9 +43,9 @@ export default function Chart({ data }: PropsChart) {
         <YAxis />
         <Tooltip />
         <Legend />
-        <Bar dataKey="compras" fill="#d8b184" activeBar={<Rectangle fill="pink" stroke="blue" />} />
-        <Bar dataKey="vendas" fill="#82ca9d" activeBar={<Rectangle fill="gold" stroke="purple" />} />
-        <Bar dataKey="saldo" fill="#82bfca" activeBar={<Rectangle fill="gold" stroke="purple" />} />
+        <Bar dataKey="compras" fill="#ec7e00" activeBar={<Rectangle fill="orange" stroke="white" />} />
+        <Bar dataKey="vendas" fill="#16d45f" activeBar={<Rectangle fill="green" stroke="white" />} />
+        <Bar dataKey="saldo" fill="#630ea8" activeBar={<Rectangle fill="purple" stroke="white" />} />
       </BarChart>
     </ResponsiveContainer>
   )

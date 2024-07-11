@@ -1,6 +1,6 @@
 'use client'
 import React, { useEffect, useState } from 'react';
-import { IClient, IProduct, ISale, ITransaction } from '@aw/utils/interface';
+import { IClient, IProduct, IStock, ITransaction } from '@aw/utils/interface';
 import { supabase } from '@aw/lib/database';
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
@@ -63,7 +63,7 @@ const formSchema = z.object({
 export default function ListSale() {
   const [search, setSearch] = useState('')
   const [clients, setClients] = useState<IClient[]>([])
-  const [products, setProducts] = useState<IProduct[]>([])
+  const [stocks, setStocks] = useState<IStock[]>([])
   const [sales, setSales] = useState<ITransaction[]>([])
   const [isPay, setIsPay] = useState(false)
   const form = useForm<z.infer<typeof formSchema>>({
@@ -80,11 +80,19 @@ export default function ListSale() {
     }
   }
 
-  async function getProducts() {
-    const { data } = await supabase.from('products').select('*').order('name')
+  async function getStocks() {
+    const { data } = await supabase.from('stocks').select('*').order('product_name')
     if (data) {
-      setProducts(data)
+      setStocks(data)
     }
+  }
+
+  async function getStockProduct(product: string) {
+    const { data } = await supabase.from('stocks').select('*').eq('product_name', product)
+    if (data) {
+      return data[0]
+    } 
+    return
   }
 
   async function getSales(search?: string, searchType?: string) {
@@ -123,24 +131,52 @@ export default function ListSale() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     let dataAtual = new Date();
     let day = String(dataAtual.getDate()).padStart(2, '0');
-    let month = String(dataAtual.getMonth() + 1).padStart(2, '0'); //getMonth() retorna meses de 0 a 11
+    let month = String(dataAtual.getMonth() + 1).padStart(2, '0'); 
     let year = dataAtual.getFullYear();
     let dataFormatada = day +'/'+ month +'/'+ year;
-    try {
-      await supabase.from('transactions').insert({
-        modality: 'sale',
-        client_name: values.client_name,
-        product_name: values.product_name,
-        amount: Number(values.amount),
-        price: Number(values.price),
-        ispaid: values.ispaid,
-        datetransaction: dataFormatada
-      })
-      alert('Venda incluída com sucesso!')
-      form.reset()
-      getSales()
-    } catch (error) {
-      console.log(error)
+    const stockTemp:IStock = await getStockProduct(values.product_name)
+    if (stockTemp) {
+      if (Number(stockTemp.amount) < Number(values.amount)) { 
+        alert('Não há estoques suficientes para esta venda.')
+        return false;
+      } else {
+        try {
+          await supabase.from('stocks')
+          .update({ amount: Number(stockTemp.amount) - Number(values.amount) })
+          .eq('product_name',values.product_name)
+          await supabase.from('transactions').insert({
+            modality: 'sale',
+            client_name: values.client_name,
+            product_name: values.product_name,
+            amount: Number(values.amount),
+            price: Number(values.price),
+            ispaid: values.ispaid,
+            datetransaction: dataFormatada
+          })
+          alert('Venda incluída com sucesso!')
+          form.reset()
+          getSales()
+        } catch (error) {
+          console.log(error)
+        }
+      }
+    } else {
+      try {
+        await supabase.from('transactions').insert({
+          modality: 'sale',
+          client_name: values.client_name,
+          product_name: values.product_name,
+          amount: Number(values.amount),
+          price: Number(values.price),
+          ispaid: values.ispaid,
+          datetransaction: dataFormatada
+        })
+        alert('Venda incluída com sucesso!')
+        form.reset()
+        getSales()
+      } catch (error) {
+        console.log(error)
+      }
     }
   }
 
@@ -158,7 +194,7 @@ export default function ListSale() {
 
   useEffect(() => {
     getClients()
-    getProducts()
+    getStocks()
     getSales()
   }, [])
 
@@ -221,8 +257,8 @@ export default function ListSale() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {products.map(pro => (
-                            <SelectItem key={pro.id} value={pro.categoryname+' - '+pro.name}>{pro.categoryname+' - '+pro.name}</SelectItem>
+                          {stocks.map(pro => (
+                            <SelectItem key={pro.id} value={pro.product_name}>{pro.product_name} ({pro.amount})</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
