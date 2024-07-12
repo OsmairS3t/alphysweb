@@ -9,6 +9,7 @@ import { supabase } from '@aw/lib/database';
 import { ICategory } from '@aw/utils/interface';
 
 const formSchema = z.object({
+  id: z.string(),
   name: z.string().min(2, {
     message: "Categoria deve ter ao menos 2 caracteres.",
   }),
@@ -16,16 +17,14 @@ const formSchema = z.object({
 
 export default function FormCategory({frmCat}:{frmCat:ICategory}) {
   const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: "",
-    },
+    resolver: zodResolver(formSchema)
   })
   
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onUpdate(values: z.infer<typeof formSchema>) {
+    console.log(values)
     try {
-      await supabase.from('categories').insert({ name: values.name })
-      alert('Categoria incluída com sucesso!')
+      await supabase.from('categories').update({ name: values.name }).eq('id', values.id)
+      alert('Categoria alterada com sucesso!')
       form.reset()
     } catch (error) {
       console.log(error)
@@ -34,7 +33,7 @@ export default function FormCategory({frmCat}:{frmCat:ICategory}) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(onUpdate)} className="space-y-4">
         <FormField
           control={form.control}
           name="name"
