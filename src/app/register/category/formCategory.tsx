@@ -19,7 +19,7 @@ export default function FormCategory({frmCat}:{frmCat:ICategory}) {
 
   const onSubmit: SubmitHandler<TCategory> = async (data) => {
     try {
-      await supabase.from('categories').insert({ name: data.name })
+      await supabase.from('categories').update({ name: data.name }).eq('id', frmCat.id)
       alert('Categoria alterada com sucesso!')
     }catch (error) {
       console.log(error)

@@ -40,7 +40,9 @@ import {
   SelectValue,
 } from "@aw/components/ui/select"
 import { Input } from '@aw/components/ui/input';
-import { PlusCircle, Search, Trash2 } from 'lucide-react';
+import { Edit2, PlusCircle, Search, Trash2 } from 'lucide-react';
+import FormProduct from './frmProduct';
+import { DialogDescription } from '@radix-ui/react-dialog';
 
 const formSchema = z.object({
   categoryname: z.string({
@@ -59,6 +61,15 @@ export default function ListProduct() {
   const [search, setSearch] = useState('')
   const [categories, setCategories] = useState<ICategory[]>([])
   const [products, setProducts] = useState<IProduct[]>([])
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [frmProduct, setFrmProduct] = useState<IProduct>(
+    {
+    id: '',
+    categoryname: '',
+    name: '',
+    price: 0,
+    photo: '',
+  })
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -76,11 +87,14 @@ export default function ListProduct() {
     }
   }
 
+  const handleDialogClose = () => {
+    setDialogOpen(false);
+  };
+
   async function getProducts() {
     const { data } = await supabase
       .from('products').select('id, categoryname, name, price, photo')
     if (data) {
-      console.log(data)
       setProducts(data)
     }
   }
@@ -95,6 +109,14 @@ export default function ListProduct() {
         console.log(error)
       }
     }
+  }
+  
+  async function loadProduct(id: string) {
+    const { data } = await supabase.from('products').select('*').eq('id', id)
+    if(data) {
+      setFrmProduct(data[0])
+    }
+    setDialogOpen(true)
   }
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
@@ -135,6 +157,7 @@ export default function ListProduct() {
           </DialogTrigger>
 
           <DialogContent>
+            <DialogDescription></DialogDescription>
             <DialogHeader>
               <DialogTitle>Novo Produto</DialogTitle>
             </DialogHeader>
@@ -220,6 +243,18 @@ export default function ListProduct() {
           </DialogContent>
 
         </Dialog>
+
+        <Dialog open={dialogOpen} onOpenChange={handleDialogClose}>
+          <DialogTrigger asChild></DialogTrigger>
+          <DialogContent>
+            <DialogDescription></DialogDescription>
+            <DialogHeader>
+              <DialogTitle>Editar Produto</DialogTitle>
+            </DialogHeader>
+            
+            <FormProduct frmPro={frmProduct} />
+          </DialogContent>
+        </Dialog> 
       </div>
 
       <Table>
@@ -240,13 +275,14 @@ export default function ListProduct() {
                 {Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
                   .format(pro.price)}
               </TableCell>
+              <TableCell width={30}><button onClick={() => loadProduct(pro.id)}><Edit2 className='w-4 h-4' /></button></TableCell>
               <TableCell width={30}><button onClick={() => handleDelete(String(pro.id))}><Trash2 className='w-4 h-4' /></button></TableCell>
             </TableRow>
           ))}
         </TableBody>
         <TableFooter>
           <TableRow>
-            <TableCell colSpan={4} className="text-right">Total: {products.length}</TableCell>
+            <TableCell colSpan={5} className="text-right">Total: {products.length}</TableCell>
           </TableRow>
         </TableFooter>
       </Table>

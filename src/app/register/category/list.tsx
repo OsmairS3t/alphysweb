@@ -18,7 +18,8 @@ import { Dialog,
   DialogTitle, 
   DialogTrigger, 
   DialogHeader, 
-  DialogClose} from '@aw/components/ui/dialog';
+  DialogClose,
+  DialogDescription} from '@aw/components/ui/dialog';
 import {
   Form,
   FormControl,
@@ -124,6 +125,7 @@ export default function ListCategory() {
           </DialogTrigger>
 
           <DialogContent>
+            <DialogDescription></DialogDescription>
             <DialogHeader>
               <DialogTitle>Nova Categoria</DialogTitle>
             </DialogHeader>
@@ -159,6 +161,7 @@ export default function ListCategory() {
         <Dialog open={dialogOpen} onOpenChange={handleDialogClose}>
           <DialogTrigger asChild></DialogTrigger>
           <DialogContent>
+            <DialogDescription></DialogDescription>
             <DialogHeader>
               <DialogTitle>Editar Categoria</DialogTitle>
             </DialogHeader>
