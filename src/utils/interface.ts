@@ -22,6 +22,7 @@ export interface IClient {
 }
 export interface IStock {
   id: string;
+  product_id: number;
   product_name: string;
   amount: number;
   hasStock: boolean;

@@ -252,7 +252,7 @@ export default function ListProduct() {
               <DialogTitle>Editar Produto</DialogTitle>
             </DialogHeader>
             
-            <FormProduct frmPro={frmProduct} />
+            <FormProduct frmPro={frmProduct} onCloseDialog={setDialogOpen} updateList={getProducts} />
           </DialogContent>
         </Dialog> 
       </div>

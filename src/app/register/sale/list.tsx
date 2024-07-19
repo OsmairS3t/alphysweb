@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { IClient, IProduct, IStock, ITransaction } from '@aw/utils/interface';
 import { supabase } from '@aw/lib/database';
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
+import { SubmitHandler, useForm } from "react-hook-form"
 import { z } from "zod"
 import {
   Table,
@@ -44,33 +44,59 @@ import { PlusCircle, Search, Trash2 } from 'lucide-react';
 import { Switch } from '@aw/components/ui/switch';
 
 const formSchema = z.object({
-  client_name: z
-    .string({
-      required_error: "É necessário selecionar uma cliente.",
-    }),
-  product_name: z.string({
-    message: "É necessário selecionar um produto.",
-  }),
+  // client_name: z
+  //   .string({
+  //     required_error: "É necessário selecionar uma cliente.",
+  //   }),
+  // product_name: z.string({
+  //   message: "É necessário selecionar um produto.",
+  // }),
   amount: z.string().min(1, {
     message: "É necessário informar ao menos 1 quantidade."
   }),
-  price: z.string().min(1, {
-    message: "É necessário informar o preço.",
-  }),
-  ispaid: z.boolean().optional(),
+  // ispaid: z.boolean().optional(),
 })
 
 export default function ListSale() {
-  const [search, setSearch] = useState('')
+  // const [search, setSearch] = useState('')
+  let amountTmp = 0
+  let priceTmp = 0
+  const [clientName, setClientName] = useState('')
+  const [productName, setProductName] = useState('')
+  const [amount, setAmount] = useState('')
+  const [price, setPrice] = useState(0)
+  const [isPay, setIsPay] = useState(false)
   const [clients, setClients] = useState<IClient[]>([])
   const [stocks, setStocks] = useState<IStock[]>([])
   const [sales, setSales] = useState<ITransaction[]>([])
-  const [isPay, setIsPay] = useState(false)
-  const form = useForm<z.infer<typeof formSchema>>({
+  const { handleSubmit, register, reset, formState: {errors}} = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema)})
 
   function handleChangeSales() {
     setIsPay(!isPay)
+  }
+
+  async function handleSelectProduct() {
+    const productid = document.getElementById('product_id') as HTMLSelectElement
+    const { data } = await supabase.from('products').select('*').eq('id', String(productid.value))
+    if (data) {
+      setProductName(data[0].name)
+      priceTmp = Number(data[0].price)
+    }
+    if ((amountTmp > 0) && (priceTmp > 0)) {
+      setPrice(amountTmp * priceTmp)
+    }
+    return document.getElementById("amount")?.focus()
+  } 
+  
+  function handleUpdatePrice() {
+    const amount = document.getElementById('amount') as HTMLInputElement
+    if (amount) {
+      amountTmp = Number(amount.value)
+    }
+    if ((amountTmp > 0) && (priceTmp > 0)) {
+      setPrice(amountTmp * priceTmp)
+    }
   }
 
   async function getClients() {
@@ -88,7 +114,7 @@ export default function ListSale() {
   }
 
   async function getStockProduct(product: string) {
-    const { data } = await supabase.from('stocks').select('*').eq('product_name', product)
+    const { data } = await supabase.from('stocks').select('*').eq('product_id', product)
     if (data) {
       return data[0]
     } 
@@ -128,56 +154,70 @@ export default function ListSale() {
     }
   }
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  type TTransaction = {
+    amount: string; 
+  }
+
+  const onSubmit: SubmitHandler<TTransaction> = async(data) => {
     let dataAtual = new Date();
     let day = String(dataAtual.getDate()).padStart(2, '0');
     let month = String(dataAtual.getMonth() + 1).padStart(2, '0'); 
     let year = dataAtual.getFullYear();
     let dataFormatada = day +'/'+ month +'/'+ year;
-    const stockTemp:IStock = await getStockProduct(values.product_name)
-    if (stockTemp) {
-      if (Number(stockTemp.amount) < Number(values.amount)) { 
-        alert('Não há estoques suficientes para esta venda.')
-        return false;
-      } else {
-        try {
-          await supabase.from('stocks')
-          .update({ amount: Number(stockTemp.amount) - Number(values.amount) })
-          .eq('product_name',values.product_name)
-          await supabase.from('transactions').insert({
-            modality: 'sale',
-            client_name: values.client_name,
-            product_name: values.product_name,
-            amount: Number(values.amount),
-            price: Number(values.price),
-            ispaid: values.ispaid,
-            datetransaction: dataFormatada
-          })
-          alert('Venda incluída com sucesso!')
-          form.reset()
-          getSales()
-        } catch (error) {
-          console.log(error)
-        }
-      }
-    } else {
-      try {
-        await supabase.from('transactions').insert({
-          modality: 'sale',
-          client_name: values.client_name,
-          product_name: values.product_name,
-          amount: Number(values.amount),
-          price: Number(values.price),
-          ispaid: values.ispaid,
-          datetransaction: dataFormatada
-        })
-        alert('Venda incluída com sucesso!')
-        form.reset()
-        getSales()
-      } catch (error) {
-        console.log(error)
-      }
+    const client_name = document.getElementById('client_name') as HTMLSelectElement
+    setClientName(client_name.value)
+    const dataInclude = {
+      client_name: clientName,
+      product_name: productName,
+      amount: amount,
+      price: price,
+      ispaid: isPay
     }
+    console.log(dataInclude)
+    // const stockTemp:IStock = await getStockProduct(productName)
+    // if (stockTemp) {
+    //   if (Number(stockTemp.amount) < Number(amount)) { 
+    //     alert('Não há estoques suficientes para esta venda.')
+    //     return false;
+    //   } else {
+    //     try {
+    //       await supabase.from('stocks')
+    //       .update({ amount: Number(stockTemp.amount) - Number(data.amount) })
+    //       .eq('product_name',data.product_name)
+    //       await supabase.from('transactions').insert({
+    //         modality: 'sale',
+    //         client_name: data.client_name,
+    //         product_name: data.product_name,
+    //         amount: Number(data.amount),
+    //         price: price,
+    //         ispaid: isPay,
+    //         datetransaction: dataFormatada
+    //       })
+    //       alert('Venda incluída com sucesso!')
+    //       reset()
+    //       getSales()
+    //     } catch (error) {
+    //       console.log(error)
+    //     }
+    //   }
+    // } else {
+    //   try {
+    //     await supabase.from('transactions').insert({
+    //       modality: 'sale',
+    //       client_name: data.client_name,
+    //       product_name: data.product_name,
+    //       amount: Number(data.amount),
+    //       price: price,
+    //       ispaid: isPay,
+    //       datetransaction: dataFormatada
+    //     })
+    //     alert('Venda incluída com sucesso!')
+    //     reset()
+    //     getSales()
+    //   } catch (error) {
+    //     console.log(error)
+    //   }
+    // }
   }
 
   async function handleDelete(id: number) {
@@ -219,109 +259,52 @@ export default function ListSale() {
               <DialogTitle>Nova Venda</DialogTitle>
             </DialogHeader>
 
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="client_name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Cliente:</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione o(a) cliente" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {clients.map(cli => (
-                            <SelectItem key={cli.id} value={cli.name}>{cli.name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                <div>
+                  <label className='font-semibold'>Cliente:</label>
+                  <select id='client_name' className='p-2 border-[1px] border-gray-300 rounded w-full'>
+                      <option value="">Selecione o cliente...</option>
+                      {clients.map(cli => (
+                        <option key={cli.id} value={cli.name}>{cli.name}</option>
+                      ))}
+                  </select>
+                </div>
 
-                <FormField
-                  control={form.control}
-                  name="product_name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Produto:</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione o produto" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {stocks.map(pro => (
-                            <SelectItem key={pro.id} value={pro.product_name}>{pro.product_name} ({pro.amount})</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div>
+                  <label className='font-semibold'>Produto:</label>
+                  <select id='product_id' onChange={handleSelectProduct} className='p-2 border-[1px] border-gray-300 rounded w-full'>
+                    <option value="">Selecione o produto...</option>
+                    {stocks.map(pro => (
+                      <option key={pro.id} value={String(pro.id)}>{pro.product_name} ({pro.amount})</option>
+                    ))}
+                  </select>
+                </div>
 
-                <FormField
-                  control={form.control}
-                  name="amount"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Quantidade:</FormLabel>
-                      <FormControl>
-                        <Input placeholder="0" {...field} />
-                      </FormControl>
-                      <FormDescription>
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div>
+                  <label className='font-semibold'>Quantidade:</label>
+                  <Input id='amount' placeholder="0" onBlur={handleUpdatePrice} />
+                </div>
 
-                <FormField
-                  control={form.control}
-                  name="price"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Preço:</FormLabel>
-                      <FormControl>
-                        <Input type='text' placeholder="0.00" {...field} />
-                      </FormControl>
-                      <FormDescription>
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className='flex flex-row gap-2'>
+                  <label className='font-semibold'>Preço:</label>
+                  <span className='text-md'>{Intl.NumberFormat('pt-BR', {style: 'currency', currency: 'BRL'}).format(price)}</span>
+                </div>
 
-                <FormField
-                  control={form.control}
-                  name="ispaid"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                      <div className="space-y-0.5">
-                        <FormLabel className="text-base">
-                          Está pago?
-                        </FormLabel>
-                        <span className='ml-4'>
-                          {isPay ? "Sim" : "Não"}
-                        </span>
-                      </div>
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                          onClick={handleChangeSales}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
+                <div className="flex flex-row items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <label className='font-semibold'>
+                      Está pago?
+                    </label>
+                    <span className='ml-4'>
+                      {isPay ? "Sim" : "Não"}
+                    </span>
+                  </div>
+                  <Switch
+                    checked={isPay}
+                    onCheckedChange={setIsPay}
+                    onClick={handleChangeSales}
+                  />
+                </div>
 
                 <div className='flex flex-row justify-end gap-2'>
                   <DialogClose>
@@ -330,7 +313,6 @@ export default function ListSale() {
                   <Button type='submit'>Salvar</Button>
                 </div>
               </form>
-            </Form>
           </DialogContent>
 
         </Dialog>

@@ -6,8 +6,6 @@ import { Button } from '@aw/components/ui/button';
 import { Input } from '@aw/components/ui/input';
 import { supabase } from '@aw/lib/database';
 import { ICategory, IProduct } from '@aw/utils/interface';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@aw/components/ui/select';
-import { FormControl } from '@aw/components/ui/form';
 
 const schemaProduct = z.object({
   name: z.string().min(2, {
@@ -19,8 +17,13 @@ const schemaProduct = z.object({
   photo: z.string(),
 })
 type TProduct = z.infer<typeof schemaProduct>
+interface Props {
+  frmPro: IProduct;
+  onCloseDialog: (isOpen:boolean) => void;
+  updateList: () => void;
+}
 
-export default function FormProduct({frmPro}:{frmPro:IProduct}) {
+export default function FormProduct({frmPro, onCloseDialog, updateList}: Props) {
   const nameCategory = frmPro.categoryname
   const [categories, setCategories] = useState<ICategory[]>([])
   const { register, handleSubmit, formState:{errors} } = useForm<TProduct>({
@@ -44,6 +47,8 @@ export default function FormProduct({frmPro}:{frmPro:IProduct}) {
         photo: data.photo,
       }).eq('id', frmPro.id)
       alert('Produto alterado com sucesso!')
+      onCloseDialog(false)
+      updateList()
     }catch (error) {
       console.log(error)
     }

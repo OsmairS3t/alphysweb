@@ -40,11 +40,13 @@ import {
   SelectValue,
 } from "@aw/components/ui/select"
 import { Input } from '@aw/components/ui/input';
-import { PlusCircle, Search, Trash2 } from 'lucide-react';
+import { Edit2, PlusCircle, Search, Trash2 } from 'lucide-react';
 import { Switch } from '@aw/components/ui/switch';
+import { DialogDescription } from '@radix-ui/react-dialog';
+import FormStock from './frmStock';
 
 const formSchema = z.object({
-  product_name: z.string({
+  idProduct: z.string({
     message: "É necessário selecionar um produto.",
   }),
   amount: z.string().min(1, {
@@ -55,22 +57,41 @@ const formSchema = z.object({
 export default function ListStock() {
   const [search, setSearch] = useState('')
   const [stocks, setStocks] = useState<IStock[]>([])
-  const [stock, setStock] = useState(false)
   const [products, setProducts] = useState<IProduct[]>([])
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [frmStock, setFrmStock] = useState<IStock>(
+    {
+    id: '',
+    product_name: '',
+    amount: 0,
+    hasStock: false
+  })
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      product_name: "",
+      idProduct: "",
       amount: "",
     },
   })
+  
+  async function loadStock(id: string) {
+    const { data } = await supabase.from('stocks').select('*').eq('id', id)
+    if(data) {
+      setFrmStock(data[0])
+    }
+    setDialogOpen(true)
+  }
 
   async function getProducts() {
-    const { data } = await supabase.from('products').select('*').order('name')
+    const { data } = await supabase.from('products').select('*').order('categoryname', {ascending:true})
     if (data) {
       setProducts(data)
     }
   }
+
+  const handleDialogClose = () => {
+    setDialogOpen(false);
+  };
 
   async function getStocks(search?: string) {
     if (search) {
@@ -79,7 +100,7 @@ export default function ListStock() {
         setStocks(data)
       }
     } else {
-      const { data } = await supabase.from('stocks').select('*')
+      const { data } = await supabase.from('stocks').select('*').order('product_name', {ascending: true})
       if (data) {
         setStocks(data)
       }
@@ -88,14 +109,20 @@ export default function ListStock() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
-      await supabase.from('stocks').insert({
-        product_name: values.product_name,
-        amount: Number(values.amount),
-        hasstock: true,
-      })
-      alert('Produto incluído no estoque com sucesso!')
-      form.reset()
-      getStocks()
+      const { data } = await supabase.from('products').select('*').eq('id', Number(values.idProduct))
+      if (data) {
+        const productName = data[0].categoryname +' - '+ data[0].name
+        const productId = data[0].id
+        await supabase.from('stocks').insert({
+          product_id: Number(productId),
+          product_name: productName,
+          amount: Number(values.amount),
+          hasstock: true,
+        })
+        alert('Produto incluído no estoque com sucesso!')
+        form.reset()
+        getStocks()
+      }
     } catch (error) {
       console.log(error)
     }
@@ -143,7 +170,7 @@ export default function ListStock() {
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <FormField
                   control={form.control}
-                  name="product_name"
+                  name="idProduct"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Produto:</FormLabel>
@@ -155,7 +182,7 @@ export default function ListStock() {
                         </FormControl>
                         <SelectContent>
                           {products.map(pro => (
-                            <SelectItem key={pro.id} value={pro.categoryname +'-'+pro.name}>{pro.categoryname} - {pro.name}</SelectItem>
+                            <SelectItem key={pro.id} value={String(pro.id)}>{pro.categoryname} - {pro.name}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -189,15 +216,25 @@ export default function ListStock() {
               </form>
             </Form>
           </DialogContent>
-
         </Dialog>
+
+        <Dialog open={dialogOpen} onOpenChange={handleDialogClose}>
+          <DialogTrigger asChild></DialogTrigger>
+          <DialogContent>
+            <DialogDescription></DialogDescription>
+            <DialogHeader>
+              <DialogTitle>Editar Produto</DialogTitle>
+            </DialogHeader>
+            <FormStock frmStock={frmStock} onCloseDialog={setDialogOpen} updateList={getStocks} />
+          </DialogContent>
+        </Dialog> 
       </div>
 
       <Table>
         <TableHeader>
           <TableRow>
             <TableHead className='font-bold text-md'>Produto</TableHead>
-            <TableHead className='font-bold text-md text-center w-96'>Quantidade</TableHead>
+            <TableHead className='font-bold text-md text-center w-32'>Quantidade</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -205,15 +242,17 @@ export default function ListStock() {
             <TableRow key={stk.id}>
               <TableCell>{stk.product_name}</TableCell>
               <TableCell className='text-center'>{stk.amount}</TableCell>
+              <TableCell width={30}><button onClick={() => loadStock(stk.id)}><Edit2 className='w-4 h-4' /></button></TableCell>
               <TableCell width={30}><button onClick={() => handleDelete(stk.id)}><Trash2 className='w-4 h-4' /></button></TableCell>
             </TableRow>
           ))}
         </TableBody>
         <TableFooter>
           <TableRow>
-            <TableCell colSpan={4} className="text-right">
-              Total de produtos no estoque: {stocks.length}
-            </TableCell>
+            <TableCell className='text-right'>Total de produtos no estoque:</TableCell>
+            <TableCell className='text-center'>{stocks.reduce((acc, obj) => acc + obj.amount, 0)}</TableCell>
+            <TableCell></TableCell>
+            <TableCell></TableCell>
           </TableRow>
         </TableFooter>
       </Table>
