@@ -1,6 +1,6 @@
 'use client'
 import React, { useEffect, useState } from 'react';
-import { IBuy, ITransaction } from '@aw/utils/interface';
+import { ITransaction } from '@aw/utils/interface';
 import { supabase } from '@aw/lib/database';
 import { zodResolver } from "@hookform/resolvers/zod"
 import { CalendarIcon, PlusCircle, Search, Trash2 } from 'lucide-react';
