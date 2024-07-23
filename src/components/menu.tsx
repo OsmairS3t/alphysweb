@@ -12,11 +12,15 @@ import { FaHome,
   FaShippingFast, 
   FaCommentsDollar, 
   FaSignOutAlt } from "react-icons/fa";
+import Image from 'next/image';
+
+import logo from '@aw/assets/logo.png'
 
 export default function Menu() {
 
   return (
     <nav className="flex flex-col justify-start items-start z-0 p-3 gap-10 font-normal h-full w-12 hover:w-44 transition-all md:w-44 border-[1px] border-r-gray-200">
+      <Image src={logo} width={100} height={100} alt='Alpys Chocolateria' />
       <Link href="/" className="flex flex-row gap-2 hover:text-orange-400"><FaHome size={28} />Home</Link>
       <div className="flex flex-col gap-2 mb-2">
         <div className="flex flex-row gap-2 mb-1"><FiLayers size={28} /> Cadastros</div>

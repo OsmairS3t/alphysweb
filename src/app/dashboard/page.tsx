@@ -107,7 +107,7 @@ export default function Dashboard() {
   return (
     <div className="flex flex-col gap-8 justify-center">
       <section className="flex flex-row justify-between items-center">
-        <h1 className="font-bold text-2xl text-black">Titulo Dashboard</h1>
+        <h1 className="font-bold text-2xl text-black">Alpys Chocolateria</h1>
       </section>
       <section className="flex flex-row flex-wrap w-96 lg:w-full justify-center gap-8">
         {
