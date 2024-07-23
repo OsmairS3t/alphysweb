@@ -42,6 +42,7 @@ export default function FormIngredient({ idrecipe }:IngredientRecipeProps) {
     try {
       const { data } = await supabase.from('recipes').select('*').eq('id', Number(id))
       if (data) {
+        console.log(data)
         data.map(item => {
           setRecipe(item)
         })
@@ -81,6 +82,7 @@ export default function FormIngredient({ idrecipe }:IngredientRecipeProps) {
 
   return (
     <>
+    <label className='text-lg'>{recipe? 'Receita de '+ recipe.nameproduct : ''}</label>
     <Form {...frmIngred}>
       <form onSubmit={frmIngred.handleSubmit(onSubmit)} className="space-y-4">
         <FormField

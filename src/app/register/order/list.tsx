@@ -65,7 +65,10 @@ export default function ListCategory() {
   }
 
   async function getProducts() {
-    const { data } = await supabase.from('products').select('*').order('name')
+    const { data } = await supabase
+      .from('products')
+      .select('*')
+      .order('categoryname', { ascending: true })
     if (data) {
       setProducts(data)
     }
@@ -73,7 +76,10 @@ export default function ListCategory() {
 
   async function getOrders(name?: string) {
     if(name) {
-      const {data} = await supabase.from('orders').select('*').like('client', name)
+      const {data} = await supabase
+        .from('orders')
+        .select('*')
+        .like('client', name)
       if(data) {
         setOrders(data)
       }
@@ -179,7 +185,7 @@ export default function ListCategory() {
                         </FormControl>
                         <SelectContent>
                           {products.map(pro => (
-                            <SelectItem key={pro.id} value={pro.name}>{pro.name}</SelectItem>
+                            <SelectItem key={pro.id} value={pro.name}>{pro.categoryname} - {pro.name}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -251,7 +257,8 @@ export default function ListCategory() {
             <TableHead className='font-bold text-md'>Cliente</TableHead>
             <TableHead className='font-bold text-md'>Produto</TableHead>
             <TableHead className='font-bold text-md'>Quant.</TableHead>
-            <TableHead className='font-bold text-md'>Preço</TableHead>
+            <TableHead className='font-bold text-md text-center w-40'>Preço</TableHead>
+            <TableHead></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -260,16 +267,25 @@ export default function ListCategory() {
               <TableCell>{ord.client_name}</TableCell>
               <TableCell>{ord.product_name}</TableCell>
               <TableCell>{ord.amount}</TableCell>
-              <TableCell>
+              <TableCell className='text-right'>
                 {Intl.NumberFormat('pt-BR', {style: 'currency', currency: 'BRL'}).format(ord.price)}
               </TableCell>
-              <TableCell width={30}><button onClick={() => handleDelete(ord.id)}><Trash2 className='w-4 h-4' /></button></TableCell>
+              <TableCell width={100} className='text-center'>
+                <button onClick={() => handleDelete(ord.id)}><Trash2 className='w-4 h-4' /></button>
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>
         <TableFooter>
           <TableRow>
-            <TableCell colSpan={5} className="text-right">Total: {orders.length}</TableCell>
+            <TableCell colSpan={3}></TableCell>
+            <TableCell className="text-right">
+              Total: {Intl.NumberFormat('pt-BR', {style: 'currency', currency: 'BRL'})
+                          .format(orders.reduce((accumulator, currentItem) => {
+                      return accumulator + currentItem.price;
+                     }, 0))}
+            </TableCell>
+            <TableCell></TableCell>
           </TableRow>
         </TableFooter>
       </Table>

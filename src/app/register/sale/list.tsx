@@ -1,9 +1,7 @@
 'use client'
 import React, { useEffect, useState } from 'react';
-import { IClient, IProduct, IStock, ITransaction } from '@aw/utils/interface';
+import { ITransaction } from '@aw/utils/interface';
 import { supabase } from '@aw/lib/database';
-import { zodResolver } from "@hookform/resolvers/zod"
-import { SubmitHandler, useForm } from "react-hook-form"
 import { z } from "zod"
 import {
   Table,
@@ -21,105 +19,16 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogHeader,
-  DialogClose
+  DialogClose,
+  DialogDescription
 } from '@aw/components/ui/dialog';
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@aw/components/ui/form"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@aw/components/ui/select"
 import { Input } from '@aw/components/ui/input';
 import { PlusCircle, Search, Trash2 } from 'lucide-react';
-import { Switch } from '@aw/components/ui/switch';
-
-const formSchema = z.object({
-  // client_name: z
-  //   .string({
-  //     required_error: "É necessário selecionar uma cliente.",
-  //   }),
-  // product_name: z.string({
-  //   message: "É necessário selecionar um produto.",
-  // }),
-  amount: z.string().min(1, {
-    message: "É necessário informar ao menos 1 quantidade."
-  }),
-  // ispaid: z.boolean().optional(),
-})
+import { FrmSale } from './frmSale';
 
 export default function ListSale() {
   // const [search, setSearch] = useState('')
-  let amountTmp = 0
-  let priceTmp = 0
-  const [clientName, setClientName] = useState('')
-  const [productName, setProductName] = useState('')
-  const [amount, setAmount] = useState('')
-  const [price, setPrice] = useState(0)
-  const [isPay, setIsPay] = useState(false)
-  const [clients, setClients] = useState<IClient[]>([])
-  const [stocks, setStocks] = useState<IStock[]>([])
   const [sales, setSales] = useState<ITransaction[]>([])
-  const { handleSubmit, register, reset, formState: {errors}} = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema)})
-
-  function handleChangeSales() {
-    setIsPay(!isPay)
-  }
-
-  async function handleSelectProduct() {
-    const productid = document.getElementById('product_id') as HTMLSelectElement
-    const { data } = await supabase.from('products').select('*').eq('id', String(productid.value))
-    if (data) {
-      setProductName(data[0].name)
-      priceTmp = Number(data[0].price)
-    }
-    if ((amountTmp > 0) && (priceTmp > 0)) {
-      setPrice(amountTmp * priceTmp)
-    }
-    return document.getElementById("amount")?.focus()
-  } 
-  
-  function handleUpdatePrice() {
-    const amount = document.getElementById('amount') as HTMLInputElement
-    if (amount) {
-      amountTmp = Number(amount.value)
-    }
-    if ((amountTmp > 0) && (priceTmp > 0)) {
-      setPrice(amountTmp * priceTmp)
-    }
-  }
-
-  async function getClients() {
-    const { data } = await supabase.from('clients').select('*').order('name')
-    if (data) {
-      setClients(data)
-    }
-  }
-
-  async function getStocks() {
-    const { data } = await supabase.from('stocks').select('*').order('product_name')
-    if (data) {
-      setStocks(data)
-    }
-  }
-
-  async function getStockProduct(product: string) {
-    const { data } = await supabase.from('stocks').select('*').eq('product_id', product)
-    if (data) {
-      return data[0]
-    } 
-    return
-  }
 
   async function getSales(search?: string, searchType?: string) {
     if (!searchType) {
@@ -154,75 +63,23 @@ export default function ListSale() {
     }
   }
 
-  type TTransaction = {
-    amount: string; 
-  }
-
-  const onSubmit: SubmitHandler<TTransaction> = async(data) => {
-    let dataAtual = new Date();
-    let day = String(dataAtual.getDate()).padStart(2, '0');
-    let month = String(dataAtual.getMonth() + 1).padStart(2, '0'); 
-    let year = dataAtual.getFullYear();
-    let dataFormatada = day +'/'+ month +'/'+ year;
-    const client_name = document.getElementById('client_name') as HTMLSelectElement
-    setClientName(client_name.value)
-    const dataInclude = {
-      client_name: clientName,
-      product_name: productName,
-      amount: amount,
-      price: price,
-      ispaid: isPay
-    }
-    console.log(dataInclude)
-    // const stockTemp:IStock = await getStockProduct(productName)
-    // if (stockTemp) {
-    //   if (Number(stockTemp.amount) < Number(amount)) { 
-    //     alert('Não há estoques suficientes para esta venda.')
-    //     return false;
-    //   } else {
-    //     try {
-    //       await supabase.from('stocks')
-    //       .update({ amount: Number(stockTemp.amount) - Number(data.amount) })
-    //       .eq('product_name',data.product_name)
-    //       await supabase.from('transactions').insert({
-    //         modality: 'sale',
-    //         client_name: data.client_name,
-    //         product_name: data.product_name,
-    //         amount: Number(data.amount),
-    //         price: price,
-    //         ispaid: isPay,
-    //         datetransaction: dataFormatada
-    //       })
-    //       alert('Venda incluída com sucesso!')
-    //       reset()
-    //       getSales()
-    //     } catch (error) {
-    //       console.log(error)
-    //     }
-    //   }
-    // } else {
-    //   try {
-    //     await supabase.from('transactions').insert({
-    //       modality: 'sale',
-    //       client_name: data.client_name,
-    //       product_name: data.product_name,
-    //       amount: Number(data.amount),
-    //       price: price,
-    //       ispaid: isPay,
-    //       datetransaction: dataFormatada
-    //     })
-    //     alert('Venda incluída com sucesso!')
-    //     reset()
-    //     getSales()
-    //   } catch (error) {
-    //     console.log(error)
-    //   }
-    // }
-  }
-
   async function handleDelete(id: number) {
+    let idStock = 0
+    let amountSale = 0
+    let amountStock = 0
     if (confirm("Tem certeza que deseja excluir esta venda?")) {
       try {
+        const dataTransaction = await supabase.from('transactions').select('*').eq('id', Number(id))
+        if (dataTransaction.data) { //encontre a quantidade vendida para deovlver ao estoque
+          amountSale = Number(dataTransaction.data[0].amount)
+          idStock = Number(dataTransaction.data[0].stock_id)
+          const dataStock = await supabase.from('stocks').select('*').eq('id', Number(idStock))
+          if (dataStock.data) {  //encontre a quantidade no estoque para aumentar com o que vai ser devolvido
+            amountStock = Number(dataStock.data[0].amount)
+          }
+          const newAmountStock = amountSale + amountStock
+          await supabase.from('stocks').update({ amount: newAmountStock }).eq('id', idStock)
+        }
         await supabase.from('transactions').delete().eq('id', id)
         alert('Venda excluida com sucesso!')
         getSales()
@@ -233,8 +90,6 @@ export default function ListSale() {
   }
 
   useEffect(() => {
-    getClients()
-    getStocks()
     getSales()
   }, [])
 
@@ -257,62 +112,9 @@ export default function ListSale() {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Nova Venda</DialogTitle>
+              <DialogDescription></DialogDescription>
             </DialogHeader>
-
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                <div>
-                  <label className='font-semibold'>Cliente:</label>
-                  <select id='client_name' className='p-2 border-[1px] border-gray-300 rounded w-full'>
-                      <option value="">Selecione o cliente...</option>
-                      {clients.map(cli => (
-                        <option key={cli.id} value={cli.name}>{cli.name}</option>
-                      ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className='font-semibold'>Produto:</label>
-                  <select id='product_id' onChange={handleSelectProduct} className='p-2 border-[1px] border-gray-300 rounded w-full'>
-                    <option value="">Selecione o produto...</option>
-                    {stocks.map(pro => (
-                      <option key={pro.id} value={String(pro.id)}>{pro.product_name} ({pro.amount})</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className='font-semibold'>Quantidade:</label>
-                  <Input id='amount' placeholder="0" onBlur={handleUpdatePrice} />
-                </div>
-
-                <div className='flex flex-row gap-2'>
-                  <label className='font-semibold'>Preço:</label>
-                  <span className='text-md'>{Intl.NumberFormat('pt-BR', {style: 'currency', currency: 'BRL'}).format(price)}</span>
-                </div>
-
-                <div className="flex flex-row items-center justify-between rounded-lg border p-4">
-                  <div className="space-y-0.5">
-                    <label className='font-semibold'>
-                      Está pago?
-                    </label>
-                    <span className='ml-4'>
-                      {isPay ? "Sim" : "Não"}
-                    </span>
-                  </div>
-                  <Switch
-                    checked={isPay}
-                    onCheckedChange={setIsPay}
-                    onClick={handleChangeSales}
-                  />
-                </div>
-
-                <div className='flex flex-row justify-end gap-2'>
-                  <DialogClose>
-                    <Button type='button' variant="outline">Cancelar</Button>
-                  </DialogClose>
-                  <Button type='submit'>Salvar</Button>
-                </div>
-              </form>
+            <FrmSale listUpdate={getSales} />
           </DialogContent>
 
         </Dialog>

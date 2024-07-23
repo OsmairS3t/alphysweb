@@ -63,6 +63,7 @@ export default function ListStock() {
     {
     id: '',
     product_name: '',
+    product_id: 0,
     amount: 0,
     hasStock: false
   })
@@ -108,18 +109,29 @@ export default function ListStock() {
   }
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    let amountProductStock = 0
     try {
       const { data } = await supabase.from('products').select('*').eq('id', Number(values.idProduct))
       if (data) {
         const productName = data[0].categoryname +' - '+ data[0].name
         const productId = data[0].id
-        await supabase.from('stocks').insert({
-          product_id: Number(productId),
-          product_name: productName,
-          amount: Number(values.amount),
-          hasstock: true,
-        })
-        alert('Produto incluído no estoque com sucesso!')
+        const stockProduct = await supabase.from('stocks').select('*').eq('product_id', Number(productId))
+        if (stockProduct.data) {
+          let stockId = stockProduct.data[0].id
+          amountProductStock = stockProduct.data[0].amount
+          await supabase.from('stocks')
+            .update({ amount: Number(values.amount) + Number(amountProductStock) })
+            .eq('id', Number(stockId))
+          alert('Estoque de produto atualizado com sucesso!')
+        } else {
+          await supabase.from('stocks').insert({
+            product_id: Number(productId),
+            product_name: productName,
+            amount: Number(values.amount),
+            hasstock: true,
+          })
+          alert('Estoque de produto incluído com sucesso!')
+        }
         form.reset()
         getStocks()
       }

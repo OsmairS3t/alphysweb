@@ -32,6 +32,7 @@ import { Input } from '@aw/components/ui/input';
 import { PlusCircle, Search, Trash2, ScanEye } from 'lucide-react';
 import { Textarea } from '@aw/components/ui/textarea';
 import FormIngredient from '@aw/components/forms/frmIngredient';
+import ViewRecipe from './viewRecipe';
 
 const formSchema = z.object({
   nameproduct: z.string().min(2, {
@@ -87,13 +88,14 @@ export default function ListRecipe() {
     setIsDialogOpen(false);
   };
 
+  const openRecipeDialog = (id: string) => {
+    setIsRecipeOpen(true)
+    setIdRecipe(id)
+  }
+
   const closeRecipeDialog = () => {
     setIsRecipeOpen(false);
   };
-
-  const openRecipeDialog = (id: string) => {
-    setIsRecipeOpen(true)
-  }
 
   function handleAddIngredient(id: string) {
     setIsDialogOpen(true);
@@ -159,7 +161,7 @@ export default function ListRecipe() {
                   name="preparation"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Local da compra:</FormLabel>
+                      <FormLabel>Modo de preparo:</FormLabel>
                       <FormControl>
                         <Textarea placeholder="Modo de preparo" {...field} />
                       </FormControl>
@@ -201,7 +203,6 @@ export default function ListRecipe() {
             <DialogHeader>
               <DialogTitle>Adicionar Ingredientes</DialogTitle>
             </DialogHeader>
-            <label>Ingredientes:</label>
             <FormIngredient idrecipe={idRecipe} />
           </DialogContent>
         </Dialog>
@@ -209,7 +210,7 @@ export default function ListRecipe() {
         <Dialog open={isRecipeOpen} onOpenChange={closeRecipeDialog}>
           <DialogContent>
             <DialogTitle>Receita</DialogTitle>
-            
+            <ViewRecipe idrecipe={Number(idRecipe)} />
           </DialogContent>
         </Dialog>
       </div>
@@ -231,16 +232,13 @@ export default function ListRecipe() {
               <TableCell>{rec.nameproduct}</TableCell>
               <TableCell>{rec.preparation}</TableCell>
               <TableCell>{rec.cooking}</TableCell>
-              <TableCell className='flex flex-row gap-4 justify-around'>
+              <TableCell className='flex flex-row justify-center items-center'>
                 <button onClick={() => handleAddIngredient(rec.id)}>
                   + Ingredientes
                 </button>
               </TableCell>
               <TableCell>
-                <button 
-                  onClick={() => openRecipeDialog(rec.id)}
-                  className='border-[1px] border-blue-300 p-2'
-                >
+                <button onClick={() => openRecipeDialog(rec.id)}>
                   Ver Receita
                 </button>
               </TableCell>
