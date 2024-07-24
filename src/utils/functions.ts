@@ -69,4 +69,3 @@ export function groupByMonthAndSumByType(data: ITransaction[]): GroupedData[] {
     totals: result[month],
   }));
 }
-
