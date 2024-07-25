@@ -29,13 +29,12 @@ import {
   FormMessage,
 } from "@aw/components/ui/form"
 import { Input } from '@aw/components/ui/input';
-import { EyeOff, PlusCircle, Search, Trash2 } from 'lucide-react';
+import { PlusCircle, Search, Trash2 } from 'lucide-react';
 import { PasswordInput } from '@aw/components/ui/password-input';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { useRouter } from 'next/navigation';
 
 const formSchema = z.object({
-  name: z.string().min(2, {
-    message: "O nome deve ter ao menos 2 caracteres.",
-  }),
   email: z.string().email('O e-mail deve ser válido'),
   password: z.string().min(6, {
     message: "A senha deve ter pelo menos 6 caracteres.",
@@ -49,12 +48,12 @@ const formSchema = z.object({
 })
 
 export default function ListUser() {
+  const router = useRouter()
   const [search, setSearch] = useState('')
   const [users, setUsers] = useState<IUser[]>([])
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: "",
       email: "",
       password: ""
     },
@@ -76,14 +75,18 @@ export default function ListUser() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
-      await supabase.from('users').insert({ 
-        name: values.name, 
-        email: values.email,
-        password: values.password
-    })
-      alert('Usuário incluído com sucesso!')
+      const supabaseCli = createClientComponentClient()
+      const { email, password } = values
+      const { 
+        error,
+        data: { user }
+      } = await supabaseCli.auth.signUp({
+        email,
+        password,
+      })
+
+      if(user) router.push('/')
       form.reset()
-      getUsers()
     } catch (error) {
       console.log(error)
     }
@@ -128,21 +131,6 @@ export default function ListUser() {
 
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Nome:</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Nome do usuário" {...field} />
-                      </FormControl>
-                      <FormDescription>
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
                 <FormField
                   control={form.control}
                   name="email"
@@ -211,7 +199,6 @@ export default function ListUser() {
         <TableBody>
           {users.map((user) => (
             <TableRow key={user.email}>
-              <TableCell>{user.name}</TableCell>
               <TableCell>{user.email}</TableCell>
               <TableCell width={30}>
                 <button onClick={() => handleDelete(user.email)}>
