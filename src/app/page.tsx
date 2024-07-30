@@ -3,19 +3,22 @@ import Dashboard from "./dashboard/page";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import { redirect, RedirectType } from "next/navigation";
+import { createClient } from "@aw/utils/supabase/server";
 
 export default async function Home() {
   let loggedIn = false;
 
   try {
-    const supabase = createServerComponentClient({cookies})
+    const supabase = createClient()
     const {data: {session}} = await supabase.auth.getSession()
-    if (session) loggedIn = false  //mudar para true
+    console.log(session)
+    if (session) loggedIn = true 
+    console.log("Sessao: ", session)
   } catch (error) {
     console.log('Home', error)
   } finally{
-    if (loggedIn) {
-      redirect('/signin', RedirectType.replace)
+    if (!loggedIn) {
+      redirect('/login', RedirectType.replace)
     }
   }
 

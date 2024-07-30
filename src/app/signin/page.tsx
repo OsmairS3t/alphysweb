@@ -42,8 +42,9 @@ export default function SignIn() {
       if(error) {
         alert('Ocorreu um erro ao tentar logar: '+ error)
       }
-
+      
       if(session) {
+        console.log(session)
         alert('Usuário logado com sucesso '+ session)
       }
 

@@ -60,16 +60,16 @@ export default function ListUser() {
   })
 
   async function getUsers(name?: string) {
-    if(name) {
-      const {data} = await supabase.from('users').select('*').like('name', name)
-      if(data) {
-        setUsers(data)
-      }
-    } else {
-      const {data} = await supabase.from('users').select('*').order('name')
-      if(data) {
-        setUsers(data)
-      }
+    // try {
+    //   const supabaseCli = createClientComponentClient()
+    //   const {data} = await supabaseCli.auth.users()
+    //   console.log(data)
+    // } catch (error) {
+    //   console.log(error)
+    // }
+    const {data} = await supabase.from('users').select('*').order('name')
+    if(data) {
+      setUsers(data)
     }
   }
 

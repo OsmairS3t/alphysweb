@@ -1,3 +1,4 @@
+'use client'
 import React from 'react';
 import Link from "next/link";
 import { FiLayers } from "react-icons/fi";
@@ -15,9 +16,12 @@ import { FaHome,
 import Image from 'next/image';
 
 import logo from '@aw/assets/logo.png'
+import { signout } from '@aw/app/login/actions'
 
 export default function Menu() {
-
+  function handleSignOut() {
+    signout()
+  }
   return (
     <nav className="flex flex-col justify-start items-start z-0 p-3 gap-10 font-normal h-full w-12 hover:w-44 transition-all md:w-44 border-[1px] border-r-gray-200">
       <Image src={logo} width={100} height={100} alt='Alpys Chocolateria' priority={true} />
@@ -39,20 +43,20 @@ export default function Menu() {
         <Link href="/register/sale" className="flex flex-row justify-start items-center gap-2 hover:text-orange-400 ml-4">
           <FaCommentsDollar size={14} />Vendas
         </Link>
-        <Link href="/register//stock" className="flex flex-row justify-start items-center gap-2 hover:text-orange-400 ml-4">
+        <Link href="/register/stock" className="flex flex-row justify-start items-center gap-2 hover:text-orange-400 ml-4">
           <FaCompressArrowsAlt size={14} />Estoque
         </Link>
-        <Link href="/register//order" className="flex flex-row justify-start items-center gap-2 hover:text-orange-400 ml-4">
+        <Link href="/register/order" className="flex flex-row justify-start items-center gap-2 hover:text-orange-400 ml-4">
           <FaShippingFast size={14} />Encomendas
         </Link>
-        <Link href="/register//recipe" className="flex flex-row justify-start items-center gap-2 hover:text-orange-400 ml-4">
+        <Link href="/register/recipe" className="flex flex-row justify-start items-center gap-2 hover:text-orange-400 ml-4">
           <FaConciergeBell size={14} />Receitas
         </Link>
-        <Link href="/register//user" className="flex flex-row justify-start items-center gap-2 hover:text-orange-400 ml-4">
+        <Link href="/register/user" className="flex flex-row justify-start items-center gap-2 hover:text-orange-400 ml-4">
           <FaRegUser size={14} />Usuários
         </Link>
       </div>
-      <Link href="/" className="flex flex-row gap-2 hover:text-orange-400"><FaSignOutAlt size={28} />Sair</Link>
+      <button onClick={handleSignOut} className="flex flex-row gap-2 hover:text-orange-400"><FaSignOutAlt size={28} />Sair</button>
     </nav>
   )
 }
