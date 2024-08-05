@@ -1,6 +1,5 @@
 'use client'
 
-import Link from "next/link";
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
@@ -9,10 +8,19 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@aw/components/ui/select";
 import { Input } from "@aw/components/ui/input";
 import { Switch } from "@aw/components/ui/switch";
+import { CalendarIcon, PlusCircle, Search, Trash2 } from 'lucide-react';
 import { IClient, IProduct, IStock } from "@aw/utils/interface";
 import { supabase } from "@aw/lib/database";
 import { useEffect, useState } from "react";
 import { DialogClose } from "@aw/components/ui/dialog";
+import { cn } from '@aw/lib/utils'
+import { format, formatISO } from "date-fns"
+import { Calendar } from '@aw/components/ui/calendar';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@aw/components/ui/popover'
 
 const FormSchema = z.object({
   client_name: z
@@ -26,31 +34,34 @@ const FormSchema = z.object({
     message: "É necessário informar ao menos 1 quantidade."
   }),
   ispaid: z.boolean().optional(),
+  datetransaction: z.date({
+    required_error: "A data da venda é necessária",
+  }),
 })
 
 interface FormSaleProps {
   listUpdate: () => void;
 }
 
-export function FrmSale({ listUpdate }:FormSaleProps) {
+export function FrmSale({ listUpdate }: FormSaleProps) {
   let dataAtual = new Date();
   let day = String(dataAtual.getDate()).padStart(2, '0');
-  let month = String(dataAtual.getMonth() + 1).padStart(2, '0'); 
+  let month = String(dataAtual.getMonth() + 1).padStart(2, '0');
   let year = dataAtual.getFullYear();
-  let dataAtualFormatada = day +'/'+ month +'/'+ year;
+  let dataAtualFormatada = day + '/' + month + '/' + year;
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
   })
   const [clients, setClients] = useState<IClient[]>([])
   const [stocks, setStocks] = useState<IStock[]>([])
-  
+
   async function loadClients() {
     const { data } = await supabase.from('clients').select('*')
     if (data) {
       setClients(data)
     }
   }
-  
+
   async function loadProducts() {
     const { data } = await supabase.from('stocks').select('*').order('product_name')
     if (data) {
@@ -63,13 +74,13 @@ export function FrmSale({ listUpdate }:FormSaleProps) {
     let salePrice
     const { data } = await supabase.from('products').select('*').eq('id', Number(dataForm.product_id))
     if (data) {
-      productName = data[0].categoryname+' - '+data[0].name
+      productName = data[0].categoryname + ' - ' + data[0].name
       salePrice = Number(data[0].price) * Number(dataForm.amount)
     }
     const stockTemp = await supabase.from('stocks').select('*').eq('product_id', Number(dataForm.product_id))
     if (stockTemp.data) {
       let stockId = stockTemp.data[0].stock_id
-      if (Number(stockTemp.data[0].amount) < Number(dataForm.amount)) { 
+      if (Number(stockTemp.data[0].amount) < Number(dataForm.amount)) {
         alert('Não há estoques suficientes para esta venda.')
         return false;
       } else {
@@ -81,7 +92,7 @@ export function FrmSale({ listUpdate }:FormSaleProps) {
           amount: Number(dataForm.amount),
           price: salePrice,
           ispaid: dataForm.ispaid,
-          datetransaction: dataAtualFormatada
+          datetransaction: dataForm.datetransaction.toLocaleDateString()
         })
         alert('Venda incluída com sucesso!')
         form.reset()
@@ -176,6 +187,50 @@ export function FrmSale({ listUpdate }:FormSaleProps) {
                   onCheckedChange={field.onChange}
                 />
               </FormControl>
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="datetransaction"
+          render={({ field }) => (
+            <FormItem className="flex flex-col">
+              <FormLabel>Data:</FormLabel>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <FormControl>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "w-[240px] pl-3 text-left font-normal",
+                        !field.value && "text-muted-foreground"
+                      )}
+                    >
+                      {field.value ? (
+                        format(field.value, "PP")
+                      ) : (
+                        <span>Informe a Data</span>
+                      )}
+                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                    </Button>
+                  </FormControl>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={field.value}
+                    onSelect={field.onChange}
+                    disabled={(date) =>
+                      date > new Date() || date < new Date("1900-01-01")
+                    }
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+              <FormDescription>
+                Data da Venda
+              </FormDescription>
+              <FormMessage />
             </FormItem>
           )}
         />

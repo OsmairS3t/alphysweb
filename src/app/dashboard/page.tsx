@@ -29,12 +29,12 @@ export default function Dashboard() {
   ];
 
   async function loadSales() {
-    const { data } = await supabase.from('transactions').select('*').eq('modality','sale').order('datetransaction', {ascending: false})
+    const { data } = await supabase.from('transactions').select('*').eq('modality', 'sale').order('datetransaction', { ascending: false })
     if (data) {
       setListSales(data)
     }
   }
-  
+
   async function loadTransactions() {
     let buys: ITransaction[] = []
     let sales: ITransaction[] = []
@@ -44,55 +44,55 @@ export default function Dashboard() {
     let dateBuyEnd = ''
     let dateSaleIni = ''
     let dateSaleEnd = ''
-    let chartTemp:IChartData[]=[]
-    let transactionChart:GroupedData[] = []
+    let chartTemp: IChartData[] = []
+    let transactionChart: GroupedData[] = []
     const { data } = await supabase.from('transactions').select('*').order('datetransaction')
     if (data) {
       buys = data.filter(item => item.modality === 'buy')
       sales = data.filter(item => item.modality === 'sale')
-      transactionChart = groupByMonthAndSumByType(data)  
+      transactionChart = groupByMonthAndSumByType(data)
       dateBuyIni = buys[0].datetransaction
-      dateBuyEnd = buys[buys.length -1].datetransaction
+      dateBuyEnd = buys[buys.length - 1].datetransaction
     }
     buys.map(item => {
       sumBuy += item.price
     })
     dateSaleIni = sales[0].datetransaction
-    dateSaleEnd = sales[sales.length -1].datetransaction
+    dateSaleEnd = sales[sales.length - 1].datetransaction
     sales.map(item => {
       sumSale += item.price
     })
-    
+
     for (let index = 0; index < transactionChart.length; index++) {
       let c = transactionChart[index].totals.buy
       let v = transactionChart[index].totals.sale
       let s = (Number(transactionChart[index].totals.sale) - Number(transactionChart[index].totals.buy))
       chartTemp.push({
         name: MonthForNumber(transactionChart[index].month),
-        compras: Number(c.toFixed(2)),
-        vendas: Number(v.toFixed(2)),
-        saldo: Number(s.toFixed(2))
-      }) 
+        compras: Number(c > 0 ? c.toFixed(2) : 0),
+        vendas: Number(v > 0 ? c.toFixed(2) : 0),
+        saldo: Number(s > 0 ? c.toFixed(2) : 0)
+      })
     }
     setChartData(chartTemp)
 
-    const transactionTemp:IResumeTransaction[] = [
+    const transactionTemp: IResumeTransaction[] = [
       {
         title: 'Vendas',
         price: String(sumSale),
-        period: 'De '+ dateSaleIni +' a '+ dateSaleEnd,
+        period: 'De ' + dateSaleIni + ' a ' + dateSaleEnd,
         icon: '+',
       },
       {
         title: 'Compras',
         price: String(sumBuy),
-        period: 'De '+ dateBuyIni +' a '+ dateBuyEnd,
+        period: 'De ' + dateBuyIni + ' a ' + dateBuyEnd,
         icon: '-',
       },
       {
         title: 'Saldo',
         price: String(sumSale - sumBuy),
-        period: 'De '+ dateBuyIni +' a '+ dateBuyEnd,
+        period: 'De ' + dateBuyIni + ' a ' + dateBuyEnd,
         icon: '',
       }
     ]
@@ -113,12 +113,12 @@ export default function Dashboard() {
         {
           transaction.map(item => (
             <CardResume
-            key={item.title}
-            title={item.title}
-            price={Number(item.price)}
-            period={item.period}
-            icon={item.icon}
-          />
+              key={item.title}
+              title={item.title}
+              price={Number(item.price)}
+              period={item.period}
+              icon={item.icon}
+            />
           ))
         }
       </section>

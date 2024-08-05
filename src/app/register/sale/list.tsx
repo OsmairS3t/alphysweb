@@ -32,7 +32,7 @@ export default function ListSale() {
 
   async function getSales(search?: string, searchType?: string) {
     if (!searchType) {
-      const { data } = await supabase.from('transactions').select('*').eq('modality','sale').order('datetransaction')
+      const { data } = await supabase.from('transactions').select('*').eq('modality', 'sale').order('datetransaction')
       if (data) {
         setSales(data)
       }
@@ -42,7 +42,7 @@ export default function ListSale() {
           const { data } = await supabase
             .from('transactions')
             .select('*')
-            .eq('modality','sale')
+            .eq('modality', 'sale')
             .eq('product_name', search)
             .order('datetransaction')
           if (data) {
@@ -52,7 +52,7 @@ export default function ListSale() {
           const { data } = await supabase
             .from('transactions')
             .select('*')
-            .eq('modality','sale')
+            .eq('modality', 'sale')
             .eq('client_name', search)
             .order('datetransaction')
           if (data) {
@@ -71,11 +71,11 @@ export default function ListSale() {
       try {
         const dataTransaction = await supabase.from('transactions').select('*').eq('id', Number(id))
         if (dataTransaction.data) { //encontre a quantidade vendida para deovlver ao estoque
-          amountSale = Number(dataTransaction.data[0].amount)
-          idStock = Number(dataTransaction.data[0].stock_id)
-          const dataStock = await supabase.from('stocks').select('*').eq('id', Number(idStock))
+          amountSale = dataTransaction.data[0].amount
+          idStock = dataTransaction.data[0].stock_id
+          const dataStock = await supabase.from('stocks').select('*').eq('id', idStock)
           if (dataStock.data) {  //encontre a quantidade no estoque para aumentar com o que vai ser devolvido
-            amountStock = Number(dataStock.data[0].amount)
+            amountStock = dataStock.data[0].amount
           }
           const newAmountStock = amountSale + amountStock
           await supabase.from('stocks').update({ amount: newAmountStock }).eq('id', idStock)
@@ -140,9 +140,9 @@ export default function ListSale() {
               <TableCell>{sale.product_name}</TableCell>
               <TableCell className='text-right'>{sale.amount}</TableCell>
               <TableCell className='text-right'>
-                {Intl.NumberFormat('pt-BR', {style: 'currency', currency: 'BRL'}).format(sale.price)}
+                {Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(sale.price)}
               </TableCell>
-              <TableCell className='text-center'>{sale.ispaid?'Sim':'Não'}</TableCell>
+              <TableCell className='text-center'>{sale.ispaid ? 'Sim' : 'Não'}</TableCell>
               <TableCell className='w-32 text-center'>
                 <button onClick={() => handleDelete(sale.id)}>
                   <Trash2 className='w-4 h-4' /></button>
@@ -153,10 +153,10 @@ export default function ListSale() {
         <TableFooter>
           <TableRow>
             <TableCell colSpan={5} className="text-right">
-              Total: {Intl.NumberFormat('pt-BR', {style: 'currency', currency: 'BRL'})
-                          .format(sales.reduce((accumulator, currentItem) => {
-                      return accumulator + currentItem.price;
-                     }, 0))}
+              Total: {Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
+                .format(sales.reduce((accumulator, currentItem) => {
+                  return accumulator + currentItem.price;
+                }, 0))}
             </TableCell>
             <TableCell></TableCell>
             <TableCell></TableCell>

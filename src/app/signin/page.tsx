@@ -15,14 +15,14 @@ import { useRouter } from 'next/navigation';
 
 const formSchema = z.object({
   email: z.string().email('O e-mail deve ser válido'),
-  password: z.string().min(6, { message: "A senha deve ter pelo menos 6 caracteres."})
+  password: z.string().min(6, { message: "A senha deve ter pelo menos 6 caracteres." })
 })
 
 export default function SignIn() {
   const router = useRouter()
-  const form = useForm({ 
+  const form = useForm({
     resolver: zodResolver(formSchema),
-      defaultValues: {
+    defaultValues: {
       email: "",
       password: ""
     },
@@ -32,27 +32,27 @@ export default function SignIn() {
     try {
       const supabaseCli = createClientComponentClient()
       const { email, password } = values
-      const { 
+      const {
         error,
         data: { session }
       } = await supabaseCli.auth.signInWithPassword({
         email,
         password,
       })
-      if(error) {
-        alert('Ocorreu um erro ao tentar logar: '+ error)
+      if (error) {
+        alert('Ocorreu um erro ao tentar logar: ' + error)
       }
-      
-      if(session) {
+
+      if (session) {
         console.log(session)
-        alert('Usuário logado com sucesso '+ session)
+        alert('Usuário logado com sucesso ' + session)
       }
 
       form.reset()
       router.replace('/')
     } catch (error) {
       console.log('SignIn', error)
-    } 
+    }
   }
 
   return (
@@ -75,7 +75,7 @@ export default function SignIn() {
                   <FormItem>
                     <FormLabel>E-mail:</FormLabel>
                     <FormControl>
-                      <Input placeholder="nome@email.com" {...field} />
+                      <Input type="text" placeholder="nome@email.com" {...field} />
                     </FormControl>
                     <FormDescription>
                     </FormDescription>
