@@ -49,12 +49,19 @@ export default function ListClients() {
 
   async function getClients(name?: string) {
     if(name) {
-      const {data} = await supabase.from('clients').select('*').like('name', name)
+      const {data} = await supabase
+        .from('clients')
+        .select('*')
+        .like('name', name)
+        .order('name')
       if(data) {
         setClients(data)
       }
     } else {
-      const {data} = await supabase.from('clients').select('*')
+      const {data} = await supabase
+        .from('clients')
+        .select('*')
+        .order('name')
       if(data) {
         setClients(data)
       }

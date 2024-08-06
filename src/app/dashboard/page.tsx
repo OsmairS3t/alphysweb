@@ -69,9 +69,9 @@ export default function Dashboard() {
       let s = (Number(transactionChart[index].totals.sale) - Number(transactionChart[index].totals.buy))
       chartTemp.push({
         name: MonthForNumber(transactionChart[index].month),
-        compras: Number(c > 0 ? c.toFixed(2) : 0),
-        vendas: Number(v > 0 ? c.toFixed(2) : 0),
-        saldo: Number(s > 0 ? c.toFixed(2) : 0)
+        compras: c ? Number(c.toFixed(2)) : 0,
+        vendas: v ? Number(v.toFixed(2)) : 0,
+        saldo: s ? Number(s.toFixed(2)) : 0
       })
     }
     setChartData(chartTemp)

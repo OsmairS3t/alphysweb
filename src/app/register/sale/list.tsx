@@ -89,6 +89,26 @@ export default function ListSale() {
     }
   }
 
+  async function handlePay(id: number) {
+    const { data } = await supabase.from('transactions').select('*').eq('id', id)
+    let productName=''
+    let clientName=''
+    let paid=false
+    if (data) {
+      productName = data[0].product_name
+      clientName = data[0].client_name
+      paid = data[0].ispaid
+    }
+    if (confirm(`Tem certeza que deseja alterar o pagamento do produto ${productName} do cliente ${clientName} ?`)) {
+      try {
+        await supabase.from('transactions').update({ispaid: !paid}).eq('id', id)
+        getSales()
+      } catch (error) {
+        console.log('Erro alteração pagamento: ', error)
+      }
+    }
+  }
+
   useEffect(() => {
     getSales()
   }, [])
@@ -142,7 +162,11 @@ export default function ListSale() {
               <TableCell className='text-right'>
                 {Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(sale.price)}
               </TableCell>
-              <TableCell className='text-center'>{sale.ispaid ? 'Sim' : 'Não'}</TableCell>
+              <TableCell className='flex justify-center items-center'>
+                <button onClick={() => handlePay(sale.id)} className='flex justify-center items-center border-[1px] border-slate-200 rounded px-2 py-1'>
+                  {sale.ispaid ? 'Sim' : 'Não'}
+                </button>
+              </TableCell>
               <TableCell className='w-32 text-center'>
                 <button onClick={() => handleDelete(sale.id)}>
                   <Trash2 className='w-4 h-4' /></button>
